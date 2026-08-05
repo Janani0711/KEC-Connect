@@ -61,13 +61,10 @@ function AppLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
-        <div className="px-6 py-6">
-          <Link to="/app" className="font-serif text-lg font-semibold">
-            KEC Connect
+        <div className="px-6 py-6 flex justify-center">
+          <Link to="/app" className="block mb-6 w-full">
+            <img src="/images/logo.webp" alt="KEC Logo" className="h-16 w-full object-contain drop-shadow-md" />
           </Link>
-          <p className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">
-            {profile?.role === "alumni" ? "Alumni dashboard" : "Student dashboard"}
-          </p>
         </div>
         <nav className="flex-1 space-y-0.5 px-3">
           {nav.map((item) => (
@@ -85,39 +82,44 @@ function AppLayout() {
             </Link>
           ))}
         </nav>
-        <div className="border-t border-sidebar-border p-3">
-          <Link
-            to="/app/profile"
-            className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-sidebar-accent"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-              {initials(profile?.name)}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm">{profile?.name || "Your profile"}</span>
-              <span className="block truncate text-xs text-muted-foreground">
-                {profile?.role === "alumni"
-                  ? profile?.company || "Alumnus"
-                  : profile?.branch
-                    ? `${profile.branch} · Year ${profile.year ?? "-"}`
-                    : "Student"}
-              </span>
-            </span>
-          </Link>
-          <Button variant="ghost" size="sm" className="mt-1 w-full justify-start" onClick={signOut}>
-            <LogOut className="h-4 w-4" /> Sign out
-          </Button>
-        </div>
+
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Mobile Header */}
         <header className="flex items-center justify-between border-b border-border px-4 py-3 md:hidden">
-          <Link to="/app" className="font-serif font-semibold">
-            KEC Connect
+          <Link to="/app" className="block">
+            <img src="/images/logo.webp" alt="KEC Logo" className="h-8 w-auto object-contain" />
           </Link>
           <Button variant="ghost" size="sm" onClick={signOut}>
             <LogOut className="h-4 w-4" />
           </Button>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden md:flex items-center justify-end border-b border-border/40 px-10 py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-800 text-sm font-medium text-white shadow-sm">
+                {initials(profile?.name)}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground leading-none">{profile?.name || "Your profile"}</span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  {profile?.role === "alumni"
+                    ? profile?.company || "Alumnus"
+                    : profile?.branch
+                      ? `${profile.branch}`
+                      : "Student"}
+                </span>
+              </div>
+            </div>
+            <div className="h-8 w-[1px] bg-border"></div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-secondary/50 gap-2" onClick={signOut}>
+              <LogOut className="h-4 w-4" /> 
+              Sign out
+            </Button>
+          </div>
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 md:hidden">
           {nav.map((item) => (
