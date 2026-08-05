@@ -1,30 +1,22 @@
-import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowRight,
+  BookOpen,
+  Briefcase,
+  Calendar,
+  CalendarClock,
+  ChevronRight,
+  Clock,
+  HelpCircle,
+  Inbox,
+  MessagesSquare,
+  Newspaper,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Award, 
-  Users, 
-  MessageSquare, 
-  BookOpen, 
-  Settings, 
-  Inbox, 
-  Newspaper, 
-  Calendar, 
-  ArrowRight, 
-  Star, 
-  Heart, 
-  CheckCircle2, 
-  FileText,
-  Clock,
-  Briefcase
-} from "lucide-react";
 import { DAYS, labelFor, CONNECT_TOPICS, timeAgo, useDirectory, useProfile } from "@/lib/kec";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -38,15 +30,6 @@ export const Route = createFileRoute("/_authenticated/app/")({
   }),
   component: HomePage,
 });
-
-function QuickLink({ to, title, body }: { to: string; title: string; body: string }) {
-  return (
-    <Link to={to} className="panel block p-5 transition-colors hover:bg-secondary">
-      <p className="font-medium">{title}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-    </Link>
-  );
-}
 
 function HomePage() {
   const { data: profile } = useProfile();
@@ -85,94 +68,295 @@ function StudentHome() {
     },
   });
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-10">
-      <header>
-        <h1 className="text-3xl">Welcome, {profile?.name?.split(" ")[0] || "there"}.</h1>
-        <p className="mt-2 text-muted-foreground">
-          {profile?.branch ? `${profile.branch} · Year ${profile.year ?? "-"}` : "Student"} — pick
-          one thing to move forward today.
-        </p>
-      </header>
+  const opportunities = useQuery({
+    queryKey: ["opportunities", "recent"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("opportunities")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return data;
+    },
+  });
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <QuickLink to="/app/forum" title="Ask a question" body="Get answers from seniors and alumni." />
-        <QuickLink
-          to="/app/office-hours"
-          title="Book office hours"
-          body="Short, focused time with a mentor."
-        />
-        <QuickLink
-          to="/app/opportunities"
-          title="Browse opportunities"
-          body="Openings and referrals from alumni."
-        />
+  return (
+    <div className="mx-auto max-w-6xl space-y-7">
+      {/* Welcome Hero Banner Card */}
+      <section className="relative overflow-hidden rounded-3xl border border-[#D5EADF]/60 bg-gradient-to-r from-[#EBF7F2] via-[#F2FAF6] to-[#E9F6F0] p-7 md:p-9 shadow-xs animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 z-10 relative">
+          <div className="max-w-xl">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+              Welcome back,{" "}
+              <span className="text-sky-500 font-extrabold">
+                {profile?.name?.split(" ")[0] || "Kiruthiya"}!
+              </span>{" "}
+              👋
+            </h1>
+            <p className="mt-2.5 text-sm md:text-base text-slate-600 leading-relaxed font-normal">
+              Learn, connect and grow with our vibrant students & alumni community.
+            </p>
+          </div>
+
+          {/* Campus Vector Illustration */}
+          <div className="w-full md:w-80 shrink-0 flex justify-center">
+            <svg className="w-full h-auto max-h-44" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="150" y="70" width="100" height="70" rx="4" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
+              <path d="M140 70 L200 40 L260 70 Z" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
+              <rect x="180" y="48" width="40" height="12" rx="2" fill="#FFFFFF" stroke="#475569" strokeWidth="1.5" />
+              <text x="200" y="57" fill="#1D8249" fontSize="8" fontWeight="bold" textAnchor="middle">KEC</text>
+              <rect x="165" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="220" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="165" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="220" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="190" y="115" width="20" height="25" fill="#475569" />
+
+              <circle cx="268" cy="35" r="16" fill="#3B82F6" />
+              <path d="M260 35 L268 30 L276 35 L268 40 Z" fill="#FFFFFF" />
+              <path d="M263 36.5 V41 C263 43 273 43 273 41 V36.5" fill="none" stroke="#FFFFFF" strokeWidth="1.5" />
+
+              <circle cx="295" cy="80" fill="#22C55E" r="14" />
+              <rect x="288" y="75" width="14" height="10" rx="1.5" fill="#FFFFFF" />
+              <path d="M292 75 V73 C292 72 298 72 298 73 V75" stroke="#FFFFFF" strokeWidth="1.5" />
+
+              <circle cx="315" cy="40" stroke="#1D8249" strokeWidth="1.5" fill="#EBF7F2" r="12" />
+              <circle cx="311" cy="40" r="1.5" fill="#1D8249" />
+              <circle cx="315" cy="40" r="1.5" fill="#1D8249" />
+              <circle cx="319" cy="40" r="1.5" fill="#1D8249" />
+
+              <circle cx="358" cy="78" fill="#2563EB" r="14" />
+              <path d="M352 74 H364 C366 74 366 80 364 80 H356 L352 84 V80 C350 80 350 74 352 74 Z" fill="#FFFFFF" />
+
+              <circle cx="105" cy="115" r="10" fill="#FCA5A5" stroke="#475569" strokeWidth="1.5" />
+              <path d="M95 140 C95 130 115 130 115 140 V155 H95 Z" fill="#4CAE30" stroke="#475569" strokeWidth="1.5" />
+              
+              <circle cx="280" cy="110" r="10" fill="#FCD34D" stroke="#475569" strokeWidth="1.5" />
+              <path d="M270 135 C270 125 290 125 290 135 V155 H270 Z" fill="#1D4ED8" stroke="#475569" strokeWidth="1.5" />
+              <rect x="290" y="132" width="22" height="14" rx="2" fill="#FFFFFF" stroke="#475569" strokeWidth="1.5" />
+
+              <path d="M50 155 H380" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="4 4" />
+            </svg>
+          </div>
+        </div>
       </section>
 
-      <section>
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl">Recent questions</h2>
-          <Link to="/app/forum" className="text-sm text-primary hover:underline">
-            View forum
-          </Link>
-        </div>
-        <div className="panel mt-4 divide-y divide-border">
-          {questions.data?.length ? (
-            questions.data.map((q) => (
-              <Link
-                key={q.id}
-                to="/app/forum/$id"
-                params={{ id: q.id }}
-                className="flex items-start justify-between gap-4 p-4 hover:bg-secondary"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{q.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {dir?.[q.author_id]?.name ?? "Member"} · {timeAgo(q.created_at)}
-                  </p>
-                </div>
-                <Badge variant={q.status === "solved" ? "default" : "secondary"}>{q.status}</Badge>
-              </Link>
-            ))
-          ) : (
-            <p className="p-6 text-sm text-muted-foreground">
-              No questions yet — be the first to ask.
+      {/* Quick Action Cards */}
+      <section className="grid gap-5 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+        {/* Card 1: Ask a Question */}
+        <Link
+          to="/app/forum"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E2F5EA] text-[#1F9054]">
+            <HelpCircle className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#1F9054] transition-colors">
+              Ask a Question
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Get answers from experienced seniors and alumni.
             </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#1F9054] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
+
+        {/* Card 2: Book Office Hours */}
+        <Link
+          to="/app/office-hours"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EBF3FE] text-[#2563EB]">
+            <Calendar className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#2563EB] transition-colors">
+              Book Office Hours
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Short, focused time with a mentor.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#2563EB] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
+
+        {/* Card 3: Browse Opportunities */}
+        <Link
+          to="/app/opportunities"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EFF7E5] text-[#65A30D]">
+            <Briefcase className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#65A30D] transition-colors">
+              Browse Opportunities
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Find internships, jobs, and referrals from alumni.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#65A30D] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
+      </section>
+
+      {/* Middle 2-Column Section */}
+      <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+        {/* Left: Recent questions */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[260px]">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h2 className="font-bold text-slate-800 text-base">Recent questions</h2>
+              <Link to="/app/forum" className="text-xs font-semibold text-[#1F9054] hover:underline">
+                View all
+              </Link>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {questions.data?.length ? (
+                questions.data.slice(0, 3).map((q) => (
+                  <Link
+                    key={q.id}
+                    to="/app/forum/$id"
+                    params={{ id: q.id }}
+                    className="flex items-center gap-3.5 py-4 hover:bg-slate-50 transition-colors rounded-lg px-2"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                      {q.title.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate font-semibold text-slate-800 text-sm">{q.title}</p>
+                      <p className="mt-0.5 truncate text-xs text-slate-500">
+                        {dir?.[q.author_id]?.name ?? "Student"} · {timeAgo(q.created_at)}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                  </Link>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-10 my-auto">
+                  <p className="text-sm font-semibold text-slate-700">No questions asked yet.</p>
+                  <p className="text-xs text-slate-500 mt-1">Be the first to ask a question to the community!</p>
+                  <Link
+                    to="/app/forum"
+                    className="mt-4 rounded-lg bg-[#4CAE30] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#429C28] shadow-xs"
+                  >
+                    Ask a Question
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 text-center mt-2">
+            <Link to="/app/forum" className="text-xs font-semibold text-[#1F9054] hover:underline">
+              See all questions
+            </Link>
+          </div>
+        </div>
+
+        {/* Right: Open office-hour slots */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[260px]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <h2 className="font-bold text-slate-800 text-base">Open office-hour slots</h2>
+            <Link to="/app/office-hours" className="text-xs font-semibold text-[#1F9054] hover:underline">
+              See all
+            </Link>
+          </div>
+
+          {slots.data?.length ? (
+            <div className="py-4 space-y-3">
+              {slots.data.slice(0, 2).map((s) => (
+                <div key={s.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-sm text-slate-800">{s.label}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {dir?.[s.host_id]?.name ?? "Mentor"} · {s.duration_minutes} mins
+                    </p>
+                  </div>
+                  <Button asChild size="sm" className="bg-[#4CAE30] hover:bg-[#429C28] text-white text-xs">
+                    <Link to="/app/office-hours">Book</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center py-8 my-auto">
+              <div className="relative mb-3 flex items-center justify-center">
+                <div className="h-20 w-20 rounded-2xl bg-[#F0FAF4] border border-[#D5EADF] flex flex-col items-center justify-center p-3 shadow-xs">
+                  <div className="w-full h-3.5 bg-[#4CAE30] rounded-t-md mb-2 flex items-center justify-around px-2">
+                    <span className="h-1 w-1 rounded-full bg-white" />
+                    <span className="h-1 w-1 rounded-full bg-white" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-1 w-full">
+                    <div className="h-2 bg-[#67C58A] rounded-xs" />
+                    <div className="h-2 bg-[#67C58A] rounded-xs" />
+                    <div className="h-2 bg-[#67C58A] rounded-xs" />
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-9 w-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center border-2 border-white shadow-xs">
+                  <Clock className="h-4 w-4" />
+                </div>
+              </div>
+
+              <h3 className="font-bold text-slate-800 text-sm">No open slots this week.</h3>
+              <p className="text-xs text-slate-500 mt-1">Check back soon for new availability!</p>
+            </div>
           )}
         </div>
       </section>
 
-      <section>
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl">Open office-hour slots</h2>
-          <Link to="/app/office-hours" className="text-sm text-primary hover:underline">
-            See all
-          </Link>
+      {/* Bottom 2-Column Section */}
+      <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
+        {/* Left: Upcoming events */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <h2 className="font-bold text-slate-800 text-base">Upcoming events</h2>
+            <Link to="/app/stories" className="text-xs font-semibold text-[#1F9054] hover:underline">
+              See all
+            </Link>
+          </div>
+
+          <div className="mt-4 flex flex-col items-center justify-center text-center py-7 px-4 rounded-2xl border border-slate-100 bg-[#F9FCFA]">
+            <p className="text-sm font-semibold text-slate-700">No upcoming events scheduled.</p>
+            <p className="text-xs text-slate-500 mt-1">Check back later for new workshops and alumni meetups.</p>
+          </div>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {slots.data?.length ? (
-            slots.data.map((s) => (
-              <div key={s.id} className="panel p-5">
-                <p className="font-medium">{s.label}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {dir?.[s.host_id]?.name ?? "Mentor"} · {s.duration_minutes} min
-                </p>
-                <p className="mt-2 text-sm">
-                  {s.is_recurring
-                    ? `Every ${DAYS[s.day_of_week ?? 0]}`
-                    : s.start_time
-                      ? new Date(s.start_time).toLocaleString()
-                      : "Time to be confirmed"}
-                </p>
-                <Button asChild size="sm" variant="outline" className="mt-4">
-                  <Link to="/app/office-hours">Book</Link>
-                </Button>
-              </div>
-            ))
+
+        {/* Right: Latest opportunities */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <h2 className="font-bold text-slate-800 text-base">Latest opportunities</h2>
+            <Link to="/app/opportunities" className="text-xs font-semibold text-[#1F9054] hover:underline">
+              See all
+            </Link>
+          </div>
+
+          {opportunities.data?.length ? (
+            <div className="mt-4 space-y-3">
+              {opportunities.data.map((opp) => (
+                <div key={opp.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-[#F9FCFA] p-4 shadow-2xs">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-800 text-xs">
+                      {opp.company?.substring(0, 3)?.toUpperCase() || "JOB"}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-sm">{opp.title}</h3>
+                      <p className="mt-0.5 text-xs text-slate-500">{opp.company} • {opp.role_type}</p>
+                    </div>
+                  </div>
+                  <Button asChild size="sm" variant="outline" className="text-xs">
+                    <Link to="/app/opportunities">View</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No open slots this week. Check back soon.
-            </p>
+            <div className="mt-4 flex flex-col items-center justify-center text-center py-7 px-4 rounded-2xl border border-slate-100 bg-[#F9FCFA]">
+              <p className="text-sm font-semibold text-slate-700">No active opportunities posted.</p>
+              <p className="text-xs text-slate-500 mt-1">Browse all opportunities or check back soon!</p>
+            </div>
           )}
         </div>
       </section>
@@ -183,9 +367,6 @@ function StudentHome() {
 function AlumniHome() {
   const { data: profile } = useProfile();
   const { data: dir } = useDirectory();
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [isMuted, setIsMuted] = React.useState(true);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const connects = useQuery({
     queryKey: ["connect_requests", "pending"],
@@ -213,416 +394,179 @@ function AlumniHome() {
     },
   });
 
-  const recentStories = useQuery({
-    queryKey: ["stories", "recent"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stories")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(2);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const unansweredQuestions = useQuery({
-    queryKey: ["questions", "unanswered"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("questions")
-        .select("*")
-        .eq("status", "unanswered")
-        .order("created_at", { ascending: false })
-        .limit(3);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const openings = useQuery({
-    queryKey: ["openings", "my-posts", profile?.id],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("openings")
-        .select("*")
-        .eq("alumni_id", profile.id)
-        .order("created_at", { ascending: false })
-        .limit(2);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const hostSlots = useQuery({
-    queryKey: ["slots", "my-slots", profile?.id],
-    enabled: !!profile?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("office_hour_slots")
-        .select("*")
-        .eq("host_id", profile.id)
-        .order("created_at", { ascending: false })
-        .limit(2);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const handlePlayToggle = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play().catch(err => console.log("Video play failed:", err));
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleMuteToggle = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
   return (
-    <div className="mx-auto max-w-6xl space-y-8 pb-12">
-      {/* Top Welcome Bar */}
-      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              Good Morning, {profile?.name?.split(" ")[0] || "Alumni"}! 👋
+    <div className="mx-auto max-w-6xl space-y-7">
+      {/* Welcome Hero Banner Card */}
+      <section className="relative overflow-hidden rounded-3xl border border-[#D5EADF]/60 bg-gradient-to-r from-[#EBF7F2] via-[#F2FAF6] to-[#E9F6F0] p-7 md:p-9 shadow-xs animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 z-10 relative">
+          <div className="max-w-xl">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+              Welcome back,{" "}
+              <span className="text-sky-500 font-extrabold">
+                {profile?.name?.split(" ")[0] || "there"}!
+              </span>{" "}
+              👋
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Great to see you making a difference in our community today.
+            <p className="mt-2.5 text-sm md:text-base text-slate-600 leading-relaxed font-normal">
+              {[profile?.job_title, profile?.company].filter(Boolean).join(" at ") ||
+                "Alumnus of Kongu Engineering College"}
+              {profile?.batch ? ` · Batch ${profile.batch}` : ""}
             </p>
           </div>
-      </header>
 
-      {/* Hero Video Banner */}
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl aspect-[21/9] w-full bg-slate-900 group animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-        {/* Background Image / Video Player */}
-        <div className="absolute inset-0 bg-slate-900">
-          <video
-            ref={videoRef}
-            src="/video.mp4"
-            loop
-            muted={isMuted}
-            playsInline
-            onClick={handlePlayToggle}
-            className={`h-full w-full object-cover transition-opacity duration-700 ${isPlaying ? "opacity-100" : "opacity-40"}`}
-            poster="/images/hero_bg.jpg"
-          />
-          {!isPlaying && (
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-              style={{ backgroundImage: `url('/images/hero_bg.jpg')` }}
-            />
-          )}
-          {/* Subtle gradient overlay */}
-          <div className={`absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/50 to-transparent pointer-events-none transition-opacity duration-700 ${isPlaying ? "opacity-0" : "opacity-100"}`} />
-        </div>
+          {/* Campus Vector Illustration */}
+          <div className="w-full md:w-80 shrink-0 flex justify-center">
+            <svg className="w-full h-auto max-h-44" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="150" y="70" width="100" height="70" rx="4" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
+              <path d="M140 70 L200 40 L260 70 Z" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
+              <rect x="180" y="48" width="40" height="12" rx="2" fill="#FFFFFF" stroke="#475569" strokeWidth="1.5" />
+              <text x="200" y="57" fill="#1D8249" fontSize="8" fontWeight="bold" textAnchor="middle">KEC</text>
+              <rect x="165" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="220" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="165" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="220" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
+              <rect x="190" y="115" width="20" height="25" fill="#475569" />
 
-        {/* Banner Content Overlay */}
-        <div className={`absolute inset-0 flex flex-col justify-between p-6 md:p-10 transition-all duration-700 ${isPlaying ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0 pointer-events-auto"}`}>
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-md border border-white/20 shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-              KEC Memories
-            </div>
-            <h2 className="mt-5 text-3xl font-extrabold text-white md:text-5xl leading-tight drop-shadow-xl max-w-lg">
-              A Walk Down Memory Lane
-            </h2>
-            <p className="mt-4 text-sm md:text-base text-slate-200 max-w-md drop-shadow-md leading-relaxed">
-              Relive the moments that made our college life unforgettable at Kongu Engineering College.
-            </p>
+              <circle cx="268" cy="35" r="16" fill="#3B82F6" />
+              <path d="M260 35 L268 30 L276 35 L268 40 Z" fill="#FFFFFF" />
+              <path d="M263 36.5 V41 C263 43 273 43 273 41 V36.5" fill="none" stroke="#FFFFFF" strokeWidth="1.5" />
+
+              <circle cx="295" cy="80" fill="#22C55E" r="14" />
+              <rect x="288" y="75" width="14" height="10" rx="1.5" fill="#FFFFFF" />
+              <path d="M292 75 V73 C292 72 298 72 298 73 V75" stroke="#FFFFFF" strokeWidth="1.5" />
+
+              <circle cx="358" cy="78" fill="#2563EB" r="14" />
+              <path d="M352 74 H364 C366 74 366 80 364 80 H356 L352 84 V80 C350 80 350 74 352 74 Z" fill="#FFFFFF" />
+
+              <path d="M50 155 H380" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="4 4" />
+            </svg>
           </div>
-        </div>
-
-        {/* Floating Controls Docked at Bottom */}
-        <div className={`absolute bottom-6 left-6 right-6 flex items-center justify-between z-10 transition-transform duration-500`}>
-          {/* Play Button */}
-          <button
-            onClick={handlePlayToggle}
-            className="flex items-center gap-3 rounded-full bg-white/95 hover:bg-white text-slate-900 px-6 py-3 text-sm font-bold shadow-xl backdrop-blur-md transition-all hover:scale-105 active:scale-95"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-inner">
-              {isPlaying ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="h-3.5 w-3.5 fill-current ml-0.5" />}
-            </span>
-            {isPlaying ? "Pause Video" : "Play 1 Min Video"}
-          </button>
-
-          {/* Mute/Audio Toggle */}
-          <button
-            onClick={handleMuteToggle}
-            className="flex items-center gap-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white px-5 py-3 text-xs font-semibold backdrop-blur-xl transition-all hover:scale-105 active:scale-95 border border-white/20 shadow-lg"
-          >
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            {isMuted ? "Click to Play Audio" : "Audio Playing"}
-          </button>
         </div>
       </section>
 
-
-
-      {/* Middle Grid */}
-      <section className="grid gap-6 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
-        {/* Column 1: Next Office Hours */}
-        <div className="panel flex flex-col justify-between p-5 shadow-sm">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-500" />
-                Your Next Office Hours
-              </h3>
-              <Link to="/app/office-hours" className="text-[11px] text-primary hover:underline font-medium">
-                View Calendar →
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {hostSlots.data?.length ? (
-                hostSlots.data.map((s) => {
-                  const date = s.start_time ? new Date(s.start_time) : new Date();
-                  const dayStr = date.getDate().toString().padStart(2, '0');
-                  const monthStr = date.toLocaleString('default', { month: 'short' }).toUpperCase();
-                  return (
-                    <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/60 p-3 hover:bg-muted/10 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-center justify-center h-12 w-12 rounded-lg bg-blue-500/5 text-blue-600 font-bold border border-blue-500/10">
-                          <span className="text-sm leading-none">{dayStr}</span>
-                          <span className="text-[9px] uppercase mt-0.5">{monthStr}</span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground line-clamp-1">{s.label}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {s.duration_minutes} mins
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-none hover:bg-emerald-500/10">
-                        Confirmed
-                      </Badge>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-xs text-muted-foreground p-4 text-center">No office hours scheduled.</p>
-              )}
-            </div>
+      {/* Quick Action Cards */}
+      <section className="grid gap-5 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+        {/* Card 1: Set Office Hours */}
+        <Link
+          to="/app/office-hours"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EBF3FE] text-[#2563EB]">
+            <CalendarClock className="h-6 w-6" />
           </div>
-          <Link to="/app/office-hours" className="text-xs text-primary font-medium hover:underline mt-4">
-            Manage Availability →
-          </Link>
-        </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#2563EB] transition-colors">
+              Set Office Hours
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Offer a slot or two to mentor KEC students this week.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#2563EB] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
 
-        {/* Column 2: Openings You Posted */}
-        <div className="panel flex flex-col justify-between p-5 shadow-sm">
+        {/* Card 2: Post Opening & Referral */}
+        <Link
+          to="/app/opportunities"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E2F5EA] text-[#1F9054]">
+            <Briefcase className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#1F9054] transition-colors">
+              Post an Opening
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Share career opportunities or offer job referrals.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#1F9054] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
+
+        {/* Card 3: Write a Story */}
+        <Link
+          to="/app/stories"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EFF7E5] text-[#65A30D]">
+            <Newspaper className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#65A30D] transition-colors">
+              Write a Story
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Share advice and experiences you wish you'd known.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#65A30D] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
+      </section>
+
+      {/* Middle 2-Column Section */}
+      <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+        {/* Left: Pending connect requests */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[240px]">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-emerald-500" />
-                Openings You Posted
-              </h3>
-              <Link to="/app/opportunities" className="text-[11px] text-primary hover:underline font-medium">
-                View All →
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h2 className="font-bold text-slate-800 text-base">Pending connect requests</h2>
+              <Link to="/app/chat" className="text-xs font-semibold text-[#1F9054] hover:underline">
+                Go to chat
               </Link>
             </div>
-            <div className="space-y-3">
-              {openings.data?.length ? (
-                openings.data.map((o) => (
-                  <div key={o.id} className="flex items-center justify-between rounded-lg border border-border/60 p-3 hover:bg-muted/10 transition-colors">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground line-clamp-1">{o.role}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{o.company}</p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] border-border bg-muted/40 font-medium">
-                      Active
-                    </Badge>
+
+            <div className="divide-y divide-slate-100">
+              {connects.data?.length ? (
+                connects.data.map((c) => (
+                  <div key={c.id} className="py-4">
+                    <p className="font-semibold text-slate-800 text-sm">
+                      {dir?.[c.from_user_id]?.name ?? "A student"}{" "}
+                      <span className="font-normal text-xs text-slate-500">
+                        · {labelFor(CONNECT_TOPICS, c.topic)}
+                      </span>
+                    </p>
+                    {c.note && <p className="mt-1 text-xs text-slate-600">{c.note}</p>}
+                    <Button asChild size="sm" variant="outline" className="mt-3 text-xs">
+                      <Link to="/app/chat">Review request</Link>
+                    </Button>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-muted-foreground p-4 text-center">No openings posted yet.</p>
+                <div className="flex flex-col items-center justify-center text-center py-10 my-auto">
+                  <p className="text-sm font-semibold text-slate-700">No pending connect requests.</p>
+                  <p className="text-xs text-slate-500 mt-1">Students can reach out to connect with you.</p>
+                </div>
               )}
             </div>
           </div>
-          <Link to="/app/opportunities" className="text-xs text-primary font-medium hover:underline mt-4">
-            Post New Opening →
-          </Link>
         </div>
 
-        {/* Column 3: Referral Requests */}
-        <div className="panel flex flex-col justify-between p-5 shadow-sm">
+        {/* Right: Pending referral requests */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[240px]">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <Inbox className="h-4 w-4 text-purple-500" />
-                Referral Requests
-              </h3>
-              <Link to="/app/referrals" className="text-[11px] text-primary hover:underline font-medium">
-                View All →
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h2 className="font-bold text-slate-800 text-base">Pending referral requests</h2>
+              <Link to="/app/referrals" className="text-xs font-semibold text-[#1F9054] hover:underline">
+                Open inbox
               </Link>
             </div>
-            <div className="space-y-3">
+
+            <div className="divide-y divide-slate-100">
               {referrals.data?.length ? (
-                referrals.data.slice(0, 2).map((r) => {
-                  const student = dir?.[r.student_id];
-                  const initialStr = student?.name ? student.name.substring(0, 2).toUpperCase() : "ST";
-                  return (
-                    <div key={r.id} className="flex items-center justify-between rounded-lg border border-border/60 p-3 hover:bg-muted/10 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-500/10 text-purple-600 font-bold text-xs">
-                          {initialStr}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground line-clamp-1">{student?.name || "Student"}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">{student?.branch || "CSE"} · Year {student?.year || 4}</p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 border-none hover:bg-amber-500/10">
-                        Pending
-                      </Badge>
-                    </div>
-                  );
-                })
+                referrals.data.map((r) => (
+                  <div key={r.id} className="py-4">
+                    <p className="font-semibold text-slate-800 text-sm">{dir?.[r.student_id]?.name ?? "A student"}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-600">{r.why_note}</p>
+                  </div>
+                ))
               ) : (
-                <p className="text-xs text-muted-foreground p-4 text-center">No pending referral requests.</p>
+                <div className="flex flex-col items-center justify-center text-center py-10 my-auto">
+                  <p className="text-sm font-semibold text-slate-700">No pending referral requests.</p>
+                  <p className="text-xs text-slate-500 mt-1">Referral requests from students will appear here.</p>
+                </div>
               )}
             </div>
-          </div>
-          <Link to="/app/referrals" className="text-xs text-primary font-medium hover:underline mt-4">
-            Review Requests →
-          </Link>
-        </div>
-      </section>
-
-      {/* Bottom Grid */}
-      <section className="grid gap-6 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
-        {/* Column 1: Recent Stories */}
-        <div className="panel p-5 shadow-sm md:col-span-1">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <Newspaper className="h-4 w-4 text-orange-500" />
-              Recent Stories
-            </h3>
-            <Link to="/app/stories" className="text-[11px] text-primary hover:underline font-medium">
-              View All →
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentStories.data?.length ? (
-              recentStories.data.map((story) => {
-                const author = dir?.[story.alumni_id];
-                return (
-                  <Link
-                    key={story.id}
-                    to={`/app/stories`}
-                    className="flex gap-3 rounded-lg border border-border/60 p-3 hover:bg-muted/10 transition-colors"
-                  >
-                    <div 
-                      className="h-12 w-16 rounded-md bg-cover bg-center shrink-0 border border-border/60 transition-transform duration-300 group-hover:scale-105"
-                      style={{ backgroundImage: `url('/images/story1.jpg')` }}
-                    />
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-foreground line-clamp-1 leading-snug">{story.title}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        By {author?.name || "Alumni"} · Batch {author?.batch || "2022"}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })
-            ) : (
-              <p className="text-xs text-muted-foreground p-4 text-center">No stories shared yet.</p>
-            )}
-          </div>
-        </div>
-
-        {/* Column 2: Unanswered Questions */}
-        <div className="panel p-5 shadow-sm md:col-span-1">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-indigo-500" />
-              Unanswered Questions
-            </h3>
-            <Link to="/app/forum" className="text-[11px] text-primary hover:underline font-medium">
-              View All →
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {unansweredQuestions.data?.length ? (
-              unansweredQuestions.data.map((q) => (
-                <Link
-                  key={q.id}
-                  to={`/app/forum/$id`}
-                  params={{ id: q.id }}
-                  className="block rounded-lg border border-border/60 p-3 hover:bg-muted/10 transition-colors"
-                >
-                  <p className="text-xs font-semibold text-foreground line-clamp-1 leading-snug">{q.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1.5">
-                    <span>{timeAgo(q.created_at)}</span>
-                    <span>•</span>
-                    <span className="text-indigo-600 font-medium">Be the first to answer</span>
-                  </p>
-                </Link>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground p-4 text-center">All questions have been answered!</p>
-            )}
-          </div>
-        </div>
-
-        {/* Column 3: Quick Links */}
-        <div className="panel p-5 shadow-sm md:col-span-1">
-          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Settings className="h-4 w-4 text-slate-500" />
-            Quick Links
-          </h3>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <Link
-              to="/app/chat"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 hover:bg-blue-500/5 transition-all group"
-            >
-              <Inbox className="h-5 w-5 text-blue-500 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-medium text-foreground mt-1.5">Chat</span>
-            </Link>
-            <Link
-              to="/app/forum"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 hover:bg-emerald-500/5 transition-all group"
-            >
-              <MessageSquare className="h-5 w-5 text-emerald-500 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-medium text-foreground mt-1.5">Forum</span>
-            </Link>
-            <Link
-              to="/app/resources"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 hover:bg-purple-500/5 transition-all group"
-            >
-              <BookOpen className="h-5 w-5 text-purple-500 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-medium text-foreground mt-1.5">Resources</span>
-            </Link>
-            <Link
-              to="/app/office-hours"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 hover:bg-amber-500/5 transition-all group"
-            >
-              <Calendar className="h-5 w-5 text-amber-500 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-medium text-foreground mt-1.5">Sessions</span>
-            </Link>
-            <Link
-              to="/app/stories"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 hover:bg-rose-500/5 transition-all group"
-            >
-              <Heart className="h-5 w-5 text-rose-500 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-medium text-foreground mt-1.5">Saved</span>
-            </Link>
-            <Link
-              to="/app/profile"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 hover:bg-slate-500/5 transition-all group"
-            >
-              <Settings className="h-5 w-5 text-slate-500 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-medium text-foreground mt-1.5">Settings</span>
-            </Link>
           </div>
         </div>
       </section>
