@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kec-connect",
+  "main": "./.output/server/index.mjs",
+  "compatibility_date": "2025-02-04",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "build": {
+    "command": "vite build"
+  },
+  "assets": {
+    "directory": "./.output/public",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "SUPABASE_URL": "https://lycmvofcwfnsagphukpi.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5Y212b2Zjd2Zuc2FncGh1a3BpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4ODcxNTcsImV4cCI6MjEwMTQ2MzE1N30.whx2CN3IOa5rxBtd-UsoOHNfZ2POu-N38RAIR5Ub6kA",
+    "SUPABASE_PROJECT_ID": "lycmvofcwfnsagphukpi",
+    "VITE_SUPABASE_URL": "https://lycmvofcwfnsagphukpi.supabase.co",
+    "VITE_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5Y212b2Zjd2Zuc2FncGh1a3BpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4ODcxNTcsImV4cCI6MjEwMTQ2MzE1N30.whx2CN3IOa5rxBtd-UsoOHNfZ2POu-N38RAIR5Ub6kA",
+    "VITE_SUPABASE_PROJECT_ID": "lycmvofcwfnsagphukpi"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
