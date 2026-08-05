@@ -89,7 +89,7 @@ function ProfilePage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header>
         <h1 className="text-3xl">Your profile</h1>
         <p className="mt-2 text-muted-foreground">

@@ -121,7 +121,7 @@ function QuestionDetail() {
   const q = question.data;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <Link to="/app/forum" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Back to forum
       </Link>

@@ -80,7 +80,7 @@ function StoriesPage() {
   const mine = (stories.data ?? []).filter((s) => s.alumni_id === me?.id);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl">Stories</h1>
