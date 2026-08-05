@@ -199,6 +199,29 @@ function AlumniHome() {
         </p>
       </header>
 
+      <section className="panel overflow-hidden border border-border/80 shadow-md">
+        <div className="border-b border-border px-5 py-4 bg-muted/30">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🎥</span>
+            <div>
+              <h2 className="font-semibold text-foreground">KEC Memories: A Walk Down Memory Lane</h2>
+              <p className="text-xs text-muted-foreground">
+                Recollect your sweet college days at Kongu Engineering College (audio enabled).
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="relative aspect-video w-full bg-black/95">
+          <video
+            src="/video.mp4"
+            controls
+            preload="metadata"
+            className="h-full w-full object-contain mx-auto"
+            poster="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&auto=format&fit=crop&q=80"
+          />
+        </div>
+      </section>
+
       <section className="grid gap-4 sm:grid-cols-3">
         <QuickLink
           to="/app/office-hours"
