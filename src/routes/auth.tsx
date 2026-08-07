@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BRANCHES, ALUMNI_BATCHES, ALUMNI_ROLES, COLLEGE_EMAIL_RE } from "@/lib/kec";
+import { BRANCHES, ALUMNI_BATCHES, ALUMNI_ROLES, PRESET_AVATARS, COLLEGE_EMAIL_RE } from "@/lib/kec";
 import {
   Mail,
   Lock,
@@ -25,6 +25,8 @@ import {
   User,
   Building2,
   GraduationCap,
+  Check,
+  Sparkles,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -58,6 +60,7 @@ function AuthPage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [avatarUrl, setAvatarUrl] = useState<string>(PRESET_AVATARS[0]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -116,6 +119,7 @@ function AuthPage() {
       options: {
         data: {
           name: name.trim(),
+          avatar_url: avatarUrl || null,
           role,
           branch: branch || null,
           year: role === "student" ? Number(year) || null : null,
@@ -180,7 +184,7 @@ function AuthPage() {
 
       {/* Main Login Card Area */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-auto z-10">
-        <div className="w-full max-w-[460px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-8 transition-all">
+        <div className="w-full max-w-[480px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-8 transition-all">
           {sent ? (
             <div className="text-center py-4 space-y-4">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
@@ -327,7 +331,7 @@ function AuthPage() {
                   </Button>
                 </form>
               ) : (
-                /* CREATE ACCOUNT FORM */
+                /* CREATE ACCOUNT FORM WITH AVATAR SELECTION */
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-1">
                     <h2 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -364,6 +368,42 @@ function AuthPage() {
                       <Building2 className="w-3.5 h-3.5" />
                       <span>Alumnus / Alumna</span>
                     </button>
+                  </div>
+
+                  {/* Avatar Picker Gallery */}
+                  <div className="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Choose Profile Avatar
+                      </Label>
+                      <div className="w-8 h-8 rounded-full border border-blue-500 overflow-hidden">
+                        <img src={avatarUrl} alt="Selected Avatar" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none">
+                      {PRESET_AVATARS.map((url, idx) => {
+                        const isSelected = avatarUrl === url;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setAvatarUrl(url)}
+                            className={`relative w-8 h-8 rounded-full flex-shrink-0 border-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? "border-blue-600 ring-2 ring-blue-500/30 scale-110"
+                                : "border-slate-200 hover:border-blue-400"
+                            }`}
+                          >
+                            <img src={url} alt={`Avatar ${idx + 1}`} className="w-full h-full rounded-full object-cover" />
+                            {isSelected && (
+                              <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                                <Check className="w-2 h-2" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Name Input */}

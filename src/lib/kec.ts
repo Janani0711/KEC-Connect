@@ -4,6 +4,17 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type Profile = Tables<"profiles">;
 
+export const PRESET_AVATARS = [
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Kiruthiya&backgroundColor=b6e3f4",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=SeniorAlumni&backgroundColor=c0aede",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=KonguScholar&backgroundColor=d1d4f9",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=KecConnect&backgroundColor=ffd5dc",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=StudentKEC&backgroundColor=ffdfbf",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=KEC1&backgroundColor=b6e3f4",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=AI&backgroundColor=c0aede",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=KecPattern",
+] as const;
+
 export const BRANCHES = [
   "CSE",
   "IT",

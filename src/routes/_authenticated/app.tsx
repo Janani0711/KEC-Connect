@@ -1,5 +1,4 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initials, useProfile } from "@/lib/kec";
@@ -58,22 +57,14 @@ function AppLayout() {
           mobileNavOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
-        {/* Sidebar Header with KEC Official Logo */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
-          <Link to="/app" className="flex items-center gap-3">
+        {/* Exact Original KEC Logo Header */}
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between">
+          <Link to="/app" className="block">
             <img
               src="/kec-logo.jpg"
-              alt="KEC Logo"
-              className="h-10 w-10 rounded-full object-contain bg-white p-0.5 border border-slate-200 shadow-sm flex-shrink-0"
+              alt="Kongu Engineering College - Transform Yourself"
+              className="h-16 w-auto object-contain"
             />
-            <div className="flex flex-col">
-              <span className="font-bold tracking-tight text-[#0F2847] text-base leading-none">
-                KEC CONNECT
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium tracking-wide">
-                Alumni Network
-              </span>
-            </div>
           </Link>
           <button
             className="md:hidden text-slate-500 hover:text-slate-700"
