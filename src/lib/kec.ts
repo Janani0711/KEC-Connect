@@ -4,7 +4,56 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type Profile = Tables<"profiles">;
 
-export const BRANCHES = ["CSE", "IT", "ECE", "EEE", "MECH", "CIVIL", "AUTO", "CHEM", "MTS", "FT"];
+export const BRANCHES = [
+  "CSE",
+  "IT",
+  "ECE",
+  "EEE",
+  "MECH",
+  "CIVIL",
+  "AIDS",
+  "AIML",
+  "CSD",
+  "AUTO",
+  "CHEM",
+  "MTS",
+  "FT",
+  "BIOTECH",
+  "EIE",
+] as const;
+
+export const ALUMNI_BATCHES = [
+  "2020-2024",
+  "2019-2023",
+  "2018-2022",
+  "2017-2021",
+  "2016-2020",
+  "2015-2019",
+  "2014-2018",
+  "2013-2017",
+  "2012-2016",
+  "2011-2015",
+  "2010-2014",
+  "2021-2025",
+] as const;
+
+export const ALUMNI_ROLES = [
+  "Software Development Engineer (SDE)",
+  "Full Stack Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Data Scientist / Data Engineer",
+  "AI / ML Engineer",
+  "DevOps / Cloud Engineer",
+  "Product Manager",
+  "UI/UX Designer",
+  "System Engineer",
+  "Business Analyst",
+  "Consultant / Technical Lead",
+  "Founder / Entrepreneur",
+  "Researcher / Higher Studies",
+  "Other",
+] as const;
 
 export const CONNECT_TOPICS = [
   { value: "internship", label: "Internship guidance" },

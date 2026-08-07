@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BRANCHES, COLLEGE_EMAIL_RE } from "@/lib/kec";
+import { BRANCHES, ALUMNI_BATCHES, ALUMNI_ROLES, COLLEGE_EMAIL_RE } from "@/lib/kec";
 import {
   Mail,
   Lock,
@@ -25,7 +25,6 @@ import {
   User,
   Building2,
   GraduationCap,
-  ArrowLeft,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -66,6 +65,7 @@ function AuthPage() {
   const [year, setYear] = useState("");
   const [batch, setBatch] = useState("");
   const [company, setCompany] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [bio, setBio] = useState("");
 
@@ -119,9 +119,9 @@ function AuthPage() {
           role,
           branch: branch || null,
           year: role === "student" ? Number(year) || null : null,
-          batch: role === "alumni" ? Number(batch) || null : null,
+          batch: role === "alumni" ? batch || null : null,
           company: role === "alumni" ? company.trim() || null : null,
-          job_title: role === "alumni" ? jobTitle.trim() || null : null,
+          job_title: role === "alumni" ? jobTitle.trim() || selectedRole || null : null,
           bio: bio.trim() || null,
         },
       },
@@ -409,13 +409,13 @@ function AuthPage() {
                     <div className="space-y-1">
                       <Label className="text-xs font-semibold text-slate-700">Department</Label>
                       <Select value={branch} onValueChange={setBranch}>
-                        <SelectTrigger className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs">
+                        <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500">
                           <SelectValue placeholder="Branch" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white border border-slate-200 text-slate-900 shadow-2xl z-50 max-h-60 overflow-y-auto">
                           {BRANCHES.map((b) => (
-                            <SelectItem key={b.code} value={b.code} className="text-xs">
-                              {b.code}
+                            <SelectItem key={b} value={b} className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">
+                              {b}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -426,27 +426,32 @@ function AuthPage() {
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold text-slate-700">Year</Label>
                         <Select value={year} onValueChange={setYear}>
-                          <SelectTrigger className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs">
+                          <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold text-slate-800">
                             <SelectValue placeholder="Current Year" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1st Year</SelectItem>
-                            <SelectItem value="2">2nd Year</SelectItem>
-                            <SelectItem value="3">3rd Year</SelectItem>
-                            <SelectItem value="4">4th Year</SelectItem>
+                          <SelectContent className="bg-white border border-slate-200 text-slate-900 shadow-2xl z-50">
+                            <SelectItem value="1" className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">1st Year</SelectItem>
+                            <SelectItem value="2" className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">2nd Year</SelectItem>
+                            <SelectItem value="3" className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">3rd Year</SelectItem>
+                            <SelectItem value="4" className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">4th Year</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     ) : (
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold text-slate-700">Grad Batch</Label>
-                        <Input
-                          type="number"
-                          value={batch}
-                          onChange={(e) => setBatch(e.target.value)}
-                          placeholder="e.g. 2023"
-                          className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
-                        />
+                        <Select value={batch} onValueChange={setBatch}>
+                          <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold text-slate-800">
+                            <SelectValue placeholder="2020-2024" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-slate-200 text-slate-900 shadow-2xl z-50 max-h-60 overflow-y-auto">
+                            {ALUMNI_BATCHES.map((b) => (
+                              <SelectItem key={b} value={b} className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">
+                                {b}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                   </div>
@@ -464,15 +469,38 @@ function AuthPage() {
                           className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                         />
                       </div>
+
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold text-slate-700">Role / Title</Label>
-                        <Input
-                          type="text"
-                          value={jobTitle}
-                          onChange={(e) => setJobTitle(e.target.value)}
-                          placeholder="Software Engineer"
-                          className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
-                        />
+                        <Select
+                          value={selectedRole}
+                          onValueChange={(val) => {
+                            setSelectedRole(val);
+                            if (val !== "Other") setJobTitle(val);
+                            else setJobTitle("");
+                          }}
+                        >
+                          <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold text-slate-800">
+                            <SelectValue placeholder="Select Role" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-slate-200 text-slate-900 shadow-2xl z-50 max-h-60 overflow-y-auto">
+                            {ALUMNI_ROLES.map((r) => (
+                              <SelectItem key={r} value={r} className="text-xs font-semibold text-slate-900 hover:bg-slate-100 cursor-pointer">
+                                {r}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {selectedRole === "Other" && (
+                          <Input
+                            type="text"
+                            value={jobTitle}
+                            onChange={(e) => setJobTitle(e.target.value)}
+                            placeholder="Enter custom role..."
+                            className="mt-1.5 h-9 rounded-xl bg-slate-50 border-slate-200 text-xs"
+                          />
+                        )}
                       </div>
                     </div>
                   )}
