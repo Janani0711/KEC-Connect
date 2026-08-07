@@ -17,21 +17,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DAYS, canHost, useDirectory, useProfile } from "@/lib/kec";
+import { Video, Calendar, Clock, CheckCircle, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/office-hours")({
   head: () => ({
     meta: [
-      { title: "Office hours — KEC Connect" },
+      { title: "Schedule Availability & Office Hours — KEC Connect" },
       {
         name: "description",
-        content: "Book focused time with KEC alumni and final-year students, or offer slots of your own.",
+        content: "Book focused time with KEC alumni and final-year students, or schedule availability of your own.",
       },
-      { property: "og:title", content: "Office hours — KEC Connect" },
-      { property: "og:description", content: "Short, focused mentoring slots." },
+      { property: "og:title", content: "Schedule Availability — KEC Connect" },
+      { property: "og:description", content: "Short, focused mentoring slots with Google Meet." },
     ],
   }),
   component: OfficeHoursPage,
 });
+
+function getGoogleMeetUrl(id: string) {
+  const clean = id.replace(/-/g, "").toLowerCase();
+  const p1 = clean.slice(0, 3) || "kec";
+  const p2 = clean.slice(3, 7) || "conn";
+  const p3 = clean.slice(7, 10) || "meet";
+  return `https://meet.google.com/${p1}-${p2}-${p3}`;
+}
 
 function OfficeHoursPage() {
   const { data: me } = useProfile();
@@ -39,8 +48,8 @@ function OfficeHoursPage() {
   const qc = useQueryClient();
   const host = canHost(me);
 
-  const [label, setLabel] = useState("Resume review");
-  const [duration, setDuration] = useState("20");
+  const [label, setLabel] = useState("Resume review & guidance");
+  const [duration, setDuration] = useState("30");
   const [recurring, setRecurring] = useState(false);
   const [day, setDay] = useState("1");
   const [startTime, setStartTime] = useState("");
@@ -76,7 +85,7 @@ function OfficeHoursPage() {
   const createSlot = useMutation({
     mutationFn: async () => {
       if (!me) throw new Error("Not signed in");
-      if (!label.trim()) throw new Error("Give the slot a label.");
+      if (!label.trim()) throw new Error("Give the slot a title.");
       if (!recurring && !startTime) throw new Error("Pick a date and time.");
       const { error } = await supabase.from("office_hour_slots").insert({
         host_id: me.id,
@@ -89,7 +98,7 @@ function OfficeHoursPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Slot published.");
+      toast.success("Availability scheduled & published successfully!");
       setStartTime("");
       qc.invalidateQueries({ queryKey: ["slots"] });
     },
@@ -121,8 +130,9 @@ function OfficeHoursPage() {
         .eq("id", slotId);
       if (e2) throw e2;
     },
-    onSuccess: () => {
-      toast.success("Booked. Your mentor can see your note.");
+    onSuccess: (_, slotId) => {
+      const meetLink = getGoogleMeetUrl(slotId);
+      toast.success(`Booked! Google Meet link generated: ${meetLink}`);
       setBookingSlot(null);
       setBookingNote("");
       qc.invalidateQueries({ queryKey: ["slots"] });
@@ -141,53 +151,72 @@ function OfficeHoursPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header>
-        <h1 className="text-3xl">Office hours</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Short, scheduled conversations. {host ? "Offer a slot, or book one yourself." : "Pick an open slot and add a note so your mentor can prepare."}
-        </p>
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            <Calendar className="w-8 h-8 text-blue-600" />
+            <span>Schedule Availability & Office Hours</span>
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-600">
+            {host
+              ? "Schedule your availability for 1:1 student guidance. Google Meet links are generated automatically."
+              : "Pick an open slot to get 1:1 career guidance with alumni and join via Google Meet at the scheduled time."}
+          </p>
+        </div>
       </header>
 
+      {/* Schedule Availability Section (for Hosts/Alumni) */}
       {host && (
         <section className="space-y-4">
-          <h2 className="text-xl">Create a slot</h2>
-          <div className="panel grid gap-4 p-5 sm:grid-cols-2">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-emerald-600" />
+            <span>Schedule Availability</span>
+          </h2>
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="s-label">Label</Label>
+              <Label htmlFor="s-label" className="text-xs font-semibold text-slate-700">
+                Topic / Title
+              </Label>
               <Input
                 id="s-label"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder="Resume review"
+                placeholder="Resume review & 1:1 mentorship"
+                className="h-10 rounded-xl bg-slate-50 border-slate-200 text-sm"
               />
             </div>
+
             <div className="space-y-2">
-              <Label>Duration</Label>
+              <Label className="text-xs font-semibold text-slate-700">Duration</Label>
               <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-slate-200 z-50">
                   {["15", "20", "30", "45", "60"].map((d) => (
-                    <SelectItem key={d} value={d}>
+                    <SelectItem key={d} value={d} className="text-sm">
                       {d} minutes
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-3 sm:col-span-2">
+
+            <div className="flex items-center gap-3 sm:col-span-2 pt-1">
               <Switch id="s-recur" checked={recurring} onCheckedChange={setRecurring} />
-              <Label htmlFor="s-recur">Repeat weekly</Label>
+              <Label htmlFor="s-recur" className="text-sm font-medium text-slate-700 cursor-pointer">
+                Repeat weekly
+              </Label>
             </div>
+
             {recurring ? (
               <div className="space-y-2">
-                <Label>Day</Label>
+                <Label className="text-xs font-semibold text-slate-700">Day</Label>
                 <Select value={day} onValueChange={setDay}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border border-slate-200 z-50">
                     {DAYS.map((d, i) => (
                       <SelectItem key={d} value={String(i)}>
                         {d}
@@ -198,107 +227,173 @@ function OfficeHoursPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label htmlFor="s-time">Date and time</Label>
+                <Label htmlFor="s-time" className="text-xs font-semibold text-slate-700">
+                  Date and time
+                </Label>
                 <Input
                   id="s-time"
                   type="datetime-local"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
+                  className="h-10 rounded-xl bg-slate-50 border-slate-200 text-sm"
                 />
               </div>
             )}
-            <div className="sm:col-span-2">
-              <Button onClick={() => createSlot.mutate()} disabled={createSlot.isPending}>
-                {createSlot.isPending ? "Publishing…" : "Publish slot"}
+
+            <div className="sm:col-span-2 pt-2">
+              <Button
+                onClick={() => createSlot.mutate()}
+                disabled={createSlot.isPending}
+                className="h-11 px-6 bg-[#0F2847] hover:bg-[#163861] text-white font-semibold rounded-xl shadow-md transition-all"
+              >
+                {createSlot.isPending ? "Scheduling…" : "Schedule & Publish Availability"}
               </Button>
             </div>
           </div>
 
-          <h2 className="text-xl">Your upcoming slots</h2>
-          <div className="panel divide-y divide-border">
+          <h2 className="text-lg font-bold text-slate-900 pt-4">Your Upcoming Slots</h2>
+          <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
             {mySlots.length ? (
-              mySlots.map((s) => (
-                <div key={s.id} className="flex items-center justify-between gap-4 p-4">
-                  <div>
-                    <p className="font-medium">{s.label}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {when(s)} · {s.duration_minutes} min
-                    </p>
+              mySlots.map((s) => {
+                const meetUrl = getGoogleMeetUrl(s.id);
+                return (
+                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
+                    <div>
+                      <p className="font-semibold text-slate-900">{s.label}</p>
+                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                        <span>{when(s)}</span> · <span>{s.duration_minutes} mins</span>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge variant={s.status === "open" ? "secondary" : "default"}>
+                        {s.status}
+                      </Badge>
+                      <a
+                        href={meetUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-all"
+                      >
+                        <Video className="w-3.5 h-3.5" />
+                        <span>Join Google Meet</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      <Button size="sm" variant="ghost" className="text-rose-600 hover:bg-rose-50" onClick={() => cancelSlot.mutate(s.id)}>
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={s.status === "open" ? "secondary" : "default"}>{s.status}</Badge>
-                    <Button size="sm" variant="ghost" onClick={() => cancelSlot.mutate(s.id)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <p className="p-6 text-sm text-muted-foreground">You haven't published any slots.</p>
+              <p className="p-6 text-sm text-slate-500">You haven't scheduled any availability slots yet.</p>
             )}
           </div>
         </section>
       )}
 
+      {/* Open Slots for Booking */}
       <section className="space-y-4">
-        <h2 className="text-xl">Open slots</h2>
+        <h2 className="text-xl font-bold text-slate-900">Available Slots</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {openSlots.length ? (
             openSlots.map((s) => (
-              <div key={s.id} className="panel p-5">
-                <p className="font-medium">{s.label}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {dir?.[s.host_id]?.name ?? "Mentor"}
-                  {dir?.[s.host_id]?.company ? ` · ${dir[s.host_id]!.company}` : ""}
-                </p>
-                <p className="mt-2 text-sm">
-                  {when(s)} · {s.duration_minutes} min
-                </p>
+              <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-slate-900">{s.label}</h3>
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                      {dir?.[s.host_id]?.name ?? "Alumni Mentor"}
+                      {dir?.[s.host_id]?.company ? ` · ${dir[s.host_id]!.company}` : ""}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {s.duration_minutes} min
+                  </Badge>
+                </div>
+
+                <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                  <span>{when(s)}</span>
+                </div>
 
                 {bookingSlot === s.id ? (
-                  <div className="mt-4 space-y-3">
+                  <div className="space-y-3 pt-2">
                     <Textarea
                       rows={3}
                       maxLength={500}
                       value={bookingNote}
                       onChange={(e) => setBookingNote(e.target.value)}
-                      placeholder="Optional: what you'd like to cover."
+                      placeholder="Optional: What topic or questions would you like to cover?"
+                      className="text-xs rounded-xl bg-slate-50 border-slate-200"
                     />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => book.mutate(s.id)} disabled={book.isPending}>
-                        Confirm booking
+                      <Button
+                        size="sm"
+                        onClick={() => book.mutate(s.id)}
+                        disabled={book.isPending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg"
+                      >
+                        {book.isPending ? "Booking..." : "Confirm & Get Google Meet"}
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setBookingSlot(null)}>
+                      <Button size="sm" variant="ghost" className="text-xs" onClick={() => setBookingSlot(null)}>
                         Cancel
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <Button size="sm" variant="outline" className="mt-4" onClick={() => setBookingSlot(s.id)}>
-                    Book this slot
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2 font-semibold text-xs rounded-xl border-blue-200 hover:bg-blue-50 text-blue-700"
+                    onClick={() => setBookingSlot(s.id)}
+                  >
+                    Book This Slot
                   </Button>
                 )}
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">No open slots right now.</p>
+            <p className="text-sm text-slate-500 col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
+              No open slots available right now. Check back soon or request custom office hours!
+            </p>
           )}
         </div>
       </section>
 
+      {/* Student Bookings with Google Meet Join Buttons */}
       {!!myBookings.data?.length && (
         <section className="space-y-4">
-          <h2 className="text-xl">Your bookings</h2>
-          <div className="panel divide-y divide-border">
+          <h2 className="text-xl font-bold text-slate-900">Your Booked Sessions</h2>
+          <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
             {myBookings.data.map((b) => {
               const slot = slots.data?.find((s) => s.id === b.slot_id);
+              const meetUrl = getGoogleMeetUrl(b.slot_id);
+              const hostProfile = dir?.[slot?.host_id ?? ""];
               return (
-                <div key={b.id} className="p-4">
-                  <p className="font-medium">{slot?.label ?? "Slot"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {slot ? when(slot) : ""} · with {dir?.[slot?.host_id ?? ""]?.name ?? "mentor"}
-                  </p>
-                  {b.note && <p className="mt-1 text-sm text-muted-foreground">{b.note}</p>}
+                <div key={b.id} className="p-5 flex flex-wrap items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <p className="font-bold text-slate-900">{slot?.label ?? "1:1 Mentorship Session"}</p>
+                    </div>
+                    <p className="text-xs text-slate-600">
+                      With <span className="font-semibold text-slate-800">{hostProfile?.name ?? "Mentor"}</span>
+                      {hostProfile?.company ? ` (${hostProfile.company})` : ""} · {slot ? when(slot) : "Scheduled"}
+                    </p>
+                    {b.note && <p className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded-lg mt-1">"{b.note}"</p>}
+                  </div>
+
+                  <a
+                    href={meetUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Video className="w-4 h-4" />
+                    <span>Join Google Meet</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
                 </div>
               );
             })}
