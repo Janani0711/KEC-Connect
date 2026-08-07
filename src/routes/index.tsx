@@ -88,11 +88,11 @@ function Landing() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+      <section className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
           A private network — invitation by college email
         </p>
-        <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] md:text-6xl">
+        <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] md:text-6xl font-bold">
           Learn from those who were once where you are.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
@@ -122,7 +122,7 @@ function Landing() {
           {pillars.map((p) => (
             <div key={p.title} className="bg-surface p-8">
               <p.icon className="h-5 w-5 text-primary" strokeWidth={1.6} />
-              <h3 className="mt-4 text-lg">{p.title}</h3>
+              <h3 className="mt-4 text-lg font-semibold">{p.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
             </div>
           ))}
@@ -132,7 +132,7 @@ function Landing() {
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid gap-10 md:grid-cols-2">
           <div>
-            <h2 className="text-3xl">This is not social media.</h2>
+            <h2 className="text-3xl font-bold">This is not social media.</h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
               There is no follower count here, nothing to farm, nothing to scroll. Every
               conversation starts with a stated topic, every mentor sets their own limits, and every
@@ -142,19 +142,19 @@ function Landing() {
           <dl className="grid grid-cols-2 gap-8 self-center">
             <div>
               <dt className="text-sm text-muted-foreground">Who can join</dt>
-              <dd className="mt-1 text-lg">KEC students &amp; alumni</dd>
+              <dd className="mt-1 text-lg font-semibold">KEC students &amp; alumni</dd>
             </div>
             <div>
               <dt className="text-sm text-muted-foreground">Mentors</dt>
-              <dd className="mt-1 text-lg">Alumni &amp; 4th years</dd>
+              <dd className="mt-1 text-lg font-semibold">Alumni &amp; 4th years</dd>
             </div>
             <div>
               <dt className="text-sm text-muted-foreground">Chat opens</dt>
-              <dd className="mt-1 text-lg">Only once accepted</dd>
+              <dd className="mt-1 text-lg font-semibold">Only once accepted</dd>
             </div>
             <div>
               <dt className="text-sm text-muted-foreground">Threads archive</dt>
-              <dd className="mt-1 text-lg">After 45 quiet days</dd>
+              <dd className="mt-1 text-lg font-semibold">After 45 quiet days</dd>
             </div>
           </dl>
         </div>

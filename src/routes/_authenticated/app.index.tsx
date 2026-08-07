@@ -1,18 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState, useRef } from "react";
 import {
   ArrowRight,
   BookOpen,
   Briefcase,
   Calendar,
   CalendarClock,
+  ChevronLeft,
   ChevronRight,
   Clock,
   HelpCircle,
   Inbox,
+  Maximize2,
   MessagesSquare,
   Newspaper,
+  Pause,
+  Play,
+  Sparkles,
   Users,
+  Volume2,
+  VolumeX,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +44,347 @@ function HomePage() {
   const { data: profile } = useProfile();
   const isAlumni = profile?.role === "alumni";
   return isAlumni ? <AlumniHome /> : <StudentHome />;
+}
+
+const VIDEOS = [
+  {
+    id: "video1",
+    src: "/video.mp4",
+    expandedSrc: "/video.mp4",
+    label: "Campus Memories 🎬",
+  },
+  {
+    id: "video2",
+    src: "/new.mp4",
+    expandedSrc: "/video2.mp4",
+    label: "Alumni Highlights 🌟",
+  },
+];
+
+/* ================= ALUMNI VIDEO HERO BANNER COMPONENT ================= */
+function VideoHeroBanner({
+  name,
+  subtitle,
+}: {
+  name: string;
+  subtitle: string;
+}) {
+  const [inBannerPlaying, setInBannerPlaying] = useState(false);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showInBannerOverlay, setShowInBannerOverlay] = useState(true);
+
+  const bannerVideoRef = useRef<HTMLVideoElement>(null);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+
+  const currentVideo = VIDEOS[activeVideoIndex];
+
+  const nextVideo = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setActiveVideoIndex((prev) => (prev + 1) % VIDEOS.length);
+  };
+
+  const prevVideo = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setActiveVideoIndex((prev) => (prev - 1 + VIDEOS.length) % VIDEOS.length);
+  };
+
+  const startInBannerVideo = () => {
+    setInBannerPlaying(true);
+    setShowInBannerOverlay(false);
+    setTimeout(() => {
+      if (bannerVideoRef.current) {
+        bannerVideoRef.current.play();
+      }
+    }, 100);
+  };
+
+  const stopInBannerVideo = () => {
+    if (bannerVideoRef.current) {
+      bannerVideoRef.current.pause();
+    }
+    setInBannerPlaying(false);
+    setShowInBannerOverlay(true);
+  };
+
+  const openVideoModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (bannerVideoRef.current) {
+      bannerVideoRef.current.pause();
+    }
+    setIsModalOpen(true);
+    setTimeout(() => {
+      if (modalVideoRef.current) {
+        modalVideoRef.current.play();
+      }
+    }, 100);
+  };
+
+  const closeVideoModal = () => {
+    if (modalVideoRef.current) {
+      modalVideoRef.current.pause();
+    }
+    setIsModalOpen(false);
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (inBannerPlaying && bannerVideoRef.current) {
+      bannerVideoRef.current.muted = !isMuted;
+    }
+    if (isModalOpen && modalVideoRef.current) {
+      modalVideoRef.current.muted = !isMuted;
+    }
+    setIsMuted(!isMuted);
+  };
+
+  return (
+    <>
+      <section className="relative w-full rounded-3xl overflow-hidden shadow-2xl border border-slate-800/80 bg-slate-950 text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="relative w-full min-h-[260px] sm:min-h-[300px] md:min-h-[350px] flex items-center overflow-hidden group">
+          
+          {/* DEFAULT STATE: Wide Panoramic KEC Administrative Block Photo */}
+          <img
+            src="/admin_block_hero.png"
+            alt="Kongu Engineering College Administrative Block"
+            className={`absolute inset-0 w-full h-full object-cover object-center block transition-opacity duration-700 ${
+              inBannerPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          />
+
+          {/* IN-BANNER SLIDING HORIZONTAL VIDEO */}
+          {inBannerPlaying && (
+            <video
+              key={currentVideo.src}
+              ref={bannerVideoRef}
+              src={currentVideo.src}
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
+              onClick={() => setShowInBannerOverlay(!showInBannerOverlay)}
+              className="absolute inset-0 w-full h-full object-cover block z-10 cursor-pointer animate-in fade-in duration-500"
+            />
+          )}
+
+          {/* GRADIENT OVERLAYS */}
+          <div
+            className={`absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent z-20 transition-opacity duration-700 ${
+              inBannerPlaying && !showInBannerOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          />
+          <div
+            className={`absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-slate-950/20 z-20 transition-opacity duration-700 ${
+              inBannerPlaying && !showInBannerOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          />
+
+          {/* TOP RIGHT EXPAND BUTTON */}
+          <button
+            type="button"
+            onClick={openVideoModal}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40 inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/40 bg-slate-900/80 hover:bg-slate-900 text-white text-xs font-semibold backdrop-blur-md transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+            title="Expand Video to Fullscreen Modal"
+          >
+            <Maximize2 className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Expand Video</span>
+          </button>
+
+          {/* IN-BANNER SLIDING ARROW BUTTONS & INDICATOR (Appears when video is playing) */}
+          {inBannerPlaying && (
+            <>
+              {/* Left Arrow Button */}
+              <button
+                type="button"
+                onClick={prevVideo}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-40 p-2.5 sm:p-3 rounded-full bg-slate-900/85 hover:bg-slate-900 text-white backdrop-blur-md border border-slate-700/80 shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                title="Previous Video"
+              >
+                <ChevronLeft className="h-5 w-5 text-emerald-400" />
+              </button>
+
+              {/* Right Arrow Button */}
+              <button
+                type="button"
+                onClick={nextVideo}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-40 p-2.5 sm:p-3 rounded-full bg-slate-900/85 hover:bg-slate-900 text-white backdrop-blur-md border border-slate-700/80 shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                title="Next Video"
+              >
+                <ChevronRight className="h-5 w-5 text-emerald-400" />
+              </button>
+
+              {/* Bottom Video Badge Indicator */}
+              <div
+                className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-white text-xs font-semibold backdrop-blur-md shadow-lg transition-all duration-500 ${
+                  !showInBannerOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-slate-200">
+                  Video {activeVideoIndex + 1} of {VIDEOS.length}: <span className="text-emerald-400 font-bold">{currentVideo.label}</span>
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* FLOATING TEXT OVERLAY CONTENT */}
+          <div
+            className={`relative z-30 w-full p-6 sm:p-8 md:p-10 flex flex-col justify-center min-h-[260px] sm:min-h-[300px] md:min-h-[350px] transition-all duration-700 ${
+              inBannerPlaying && !showInBannerOverlay
+                ? "opacity-0 translate-y-4 pointer-events-none"
+                : "opacity-100 translate-y-0"
+            } group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0`}
+          >
+            {/* Top Left Welcome Heading */}
+            <div className="max-w-lg space-y-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight flex items-center gap-2 drop-shadow-md">
+                Welcome back, <span className="text-[#38D399] font-extrabold">{name}!</span> 👋
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base text-slate-100 font-medium leading-relaxed drop-shadow-xs">
+                {subtitle}
+              </p>
+
+              {/* WATCH BUTTON & CONTROLS */}
+              <div className="pt-3 flex items-center gap-3">
+                {!inBannerPlaying ? (
+                  <button
+                    type="button"
+                    onClick={startInBannerVideo}
+                    className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-white/50 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs sm:text-sm font-semibold transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    <Play className="h-4 w-4 fill-white ml-0.5" />
+                    <span>Watch campus memories</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={stopInBannerVideo}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/40 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer"
+                    >
+                      <Pause className="h-4 w-4 fill-white" />
+                      <span>Back to Banner</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border border-white/20 bg-black/50 hover:bg-black/70 backdrop-blur-md text-slate-200 hover:text-white text-xs font-medium transition-all cursor-pointer"
+                    >
+                      {isMuted ? <VolumeX className="h-4 w-4 text-amber-400" /> : <Volume2 className="h-4 w-4 text-emerald-400" />}
+                      <span>{isMuted ? "Unmute" : "Muted"}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* POP-UP LIGHTBOX MODAL */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-black/90 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={closeVideoModal}
+        >
+          {/* Modal Container */}
+          <div
+            className="relative w-full max-w-5xl bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col items-center animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Bar inside Modal */}
+            <div className="w-full flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-400" />
+                <span className="font-bold text-sm text-white">
+                  KEC Video Spotlight — {currentVideo.label} (Full High Resolution)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Modal Sliding Controls */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold mr-2">
+                  <button
+                    type="button"
+                    onClick={prevVideo}
+                    className="p-1 rounded-full hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="text-slate-200 font-bold">
+                    {activeVideoIndex + 1} / {VIDEOS.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={nextVideo}
+                    className="p-1 rounded-full hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors cursor-pointer"
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <VolumeX className="h-4 w-4 text-amber-400" /> : <Volume2 className="h-4 w-4 text-emerald-400" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={closeVideoModal}
+                  className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors cursor-pointer"
+                  title="Close Video Modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Video Container */}
+            <div className="w-full bg-black p-2 flex items-center justify-center relative group">
+              <video
+                key={currentVideo.expandedSrc || currentVideo.src}
+                ref={modalVideoRef}
+                src={currentVideo.expandedSrc || currentVideo.src}
+                controls
+                autoPlay
+                loop
+                muted={isMuted}
+                playsInline
+                className="w-full h-auto max-h-[75vh] object-contain rounded-2xl shadow-2xl block animate-in fade-in duration-300"
+              />
+
+              {/* Slider Floating Arrows inside Modal */}
+              <button
+                type="button"
+                onClick={prevVideo}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-slate-700 transition-transform hover:scale-110 cursor-pointer z-20"
+                title="Previous Video"
+              >
+                <ChevronLeft className="h-6 w-6 text-emerald-400" />
+              </button>
+
+              <button
+                type="button"
+                onClick={nextVideo}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-slate-700 transition-transform hover:scale-110 cursor-pointer z-20"
+                title="Next Video"
+              >
+                <ChevronRight className="h-6 w-6 text-emerald-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 function StudentHome() {
@@ -83,7 +433,7 @@ function StudentHome() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
-      {/* Welcome Hero Banner Card */}
+      {/* Welcome Hero Banner Card for Students */}
       <section className="relative overflow-hidden rounded-3xl border border-[#D5EADF]/60 bg-gradient-to-r from-[#EBF7F2] via-[#F2FAF6] to-[#E9F6F0] p-7 md:p-9 shadow-xs animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 z-10 relative">
           <div className="max-w-xl">
@@ -98,90 +448,47 @@ function StudentHome() {
               Learn, connect and grow with our vibrant students & alumni community.
             </p>
           </div>
-
-          {/* Campus Vector Illustration */}
-          <div className="w-full md:w-80 shrink-0 flex justify-center">
-            <svg className="w-full h-auto max-h-44" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="150" y="70" width="100" height="70" rx="4" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
-              <path d="M140 70 L200 40 L260 70 Z" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
-              <rect x="180" y="48" width="40" height="12" rx="2" fill="#FFFFFF" stroke="#475569" strokeWidth="1.5" />
-              <text x="200" y="57" fill="#1D8249" fontSize="8" fontWeight="bold" textAnchor="middle">KEC</text>
-              <rect x="165" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="220" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="165" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="220" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="190" y="115" width="20" height="25" fill="#475569" />
-
-              <circle cx="268" cy="35" r="16" fill="#3B82F6" />
-              <path d="M260 35 L268 30 L276 35 L268 40 Z" fill="#FFFFFF" />
-              <path d="M263 36.5 V41 C263 43 273 43 273 41 V36.5" fill="none" stroke="#FFFFFF" strokeWidth="1.5" />
-
-              <circle cx="295" cy="80" fill="#22C55E" r="14" />
-              <rect x="288" y="75" width="14" height="10" rx="1.5" fill="#FFFFFF" />
-              <path d="M292 75 V73 C292 72 298 72 298 73 V75" stroke="#FFFFFF" strokeWidth="1.5" />
-
-              <circle cx="315" cy="40" stroke="#1D8249" strokeWidth="1.5" fill="#EBF7F2" r="12" />
-              <circle cx="311" cy="40" r="1.5" fill="#1D8249" />
-              <circle cx="315" cy="40" r="1.5" fill="#1D8249" />
-              <circle cx="319" cy="40" r="1.5" fill="#1D8249" />
-
-              <circle cx="358" cy="78" fill="#2563EB" r="14" />
-              <path d="M352 74 H364 C366 74 366 80 364 80 H356 L352 84 V80 C350 80 350 74 352 74 Z" fill="#FFFFFF" />
-
-              <circle cx="105" cy="115" r="10" fill="#FCA5A5" stroke="#475569" strokeWidth="1.5" />
-              <path d="M95 140 C95 130 115 130 115 140 V155 H95 Z" fill="#4CAE30" stroke="#475569" strokeWidth="1.5" />
-              
-              <circle cx="280" cy="110" r="10" fill="#FCD34D" stroke="#475569" strokeWidth="1.5" />
-              <path d="M270 135 C270 125 290 125 290 135 V155 H270 Z" fill="#1D4ED8" stroke="#475569" strokeWidth="1.5" />
-              <rect x="290" y="132" width="22" height="14" rx="2" fill="#FFFFFF" stroke="#475569" strokeWidth="1.5" />
-
-              <path d="M50 155 H380" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="4 4" />
-            </svg>
-          </div>
         </div>
       </section>
 
       {/* Quick Action Cards */}
       <section className="grid gap-5 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-        {/* Card 1: Ask a Question */}
         <Link
-          to="/app/forum"
-          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E2F5EA] text-[#1F9054]">
-            <HelpCircle className="h-6 w-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#1F9054] transition-colors">
-              Ask a Question
-            </h3>
-            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-              Get answers from experienced seniors and alumni.
-            </p>
-          </div>
-          <ArrowRight className="h-4 w-4 text-[#1F9054] self-end opacity-80 transition-transform group-hover:translate-x-1" />
-        </Link>
-
-        {/* Card 2: Book Office Hours */}
-        <Link
-          to="/app/office-hours"
+          to="/app/connect"
           className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EBF3FE] text-[#2563EB]">
-            <Calendar className="h-6 w-6" />
+            <Users className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#2563EB] transition-colors">
-              Book Office Hours
+              Connect with Seniors
             </h3>
             <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-              Short, focused time with a mentor.
+              Find alumni by branch & company to request 1:1 guidance.
             </p>
           </div>
           <ArrowRight className="h-4 w-4 text-[#2563EB] self-end opacity-80 transition-transform group-hover:translate-x-1" />
         </Link>
 
-        {/* Card 3: Browse Opportunities */}
+        <Link
+          to="/app/office-hours"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E2F5EA] text-[#1F9054]">
+            <CalendarClock className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#1F9054] transition-colors">
+              Book Office Hours
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              Reserve 1:1 mentorship slots for resume review & prep.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-[#1F9054] self-end opacity-80 transition-transform group-hover:translate-x-1" />
+        </Link>
+
         <Link
           to="/app/opportunities"
           className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -191,10 +498,10 @@ function StudentHome() {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-slate-800 text-sm group-hover:text-[#65A30D] transition-colors">
-              Browse Opportunities
+              Job Referrals
             </h3>
             <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-              Find internships, jobs, and referrals from alumni.
+              Apply to opportunities & request employee referrals.
             </p>
           </div>
           <ArrowRight className="h-4 w-4 text-[#65A30D] self-end opacity-80 transition-transform group-hover:translate-x-1" />
@@ -203,50 +510,35 @@ function StudentHome() {
 
       {/* Middle 2-Column Section */}
       <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
-        {/* Left: Recent questions */}
+        {/* Left: Recent Questions */}
         <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[260px]">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <h2 className="font-bold text-slate-800 text-base">Recent questions</h2>
               <Link to="/app/forum" className="text-xs font-semibold text-[#1F9054] hover:underline">
-                View all
+                Ask a question
               </Link>
             </div>
 
-            <div className="divide-y divide-slate-100">
-              {questions.data?.length ? (
-                questions.data.slice(0, 3).map((q) => (
-                  <Link
-                    key={q.id}
-                    to="/app/forum/$id"
-                    params={{ id: q.id }}
-                    className="flex items-center gap-3.5 py-4 hover:bg-slate-50 transition-colors rounded-lg px-2"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
-                      {q.title.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate font-semibold text-slate-800 text-sm">{q.title}</p>
-                      <p className="mt-0.5 truncate text-xs text-slate-500">
-                        {dir?.[q.author_id]?.name ?? "Student"} · {timeAgo(q.created_at)}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
-                  </Link>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center py-10 my-auto">
-                  <p className="text-sm font-semibold text-slate-700">No questions asked yet.</p>
-                  <p className="text-xs text-slate-500 mt-1">Be the first to ask a question to the community!</p>
-                  <Link
-                    to="/app/forum"
-                    className="mt-4 rounded-lg bg-[#4CAE30] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#429C28] shadow-xs"
-                  >
-                    Ask a Question
-                  </Link>
-                </div>
-              )}
-            </div>
+            {questions.data?.length ? (
+              <div className="divide-y divide-slate-100">
+                {questions.data.map((q) => (
+                  <div key={q.id} className="py-3">
+                    <Link to="/app/forum/$id" params={{ id: q.id }} className="font-semibold text-slate-800 text-sm hover:text-[#2563EB] transition-colors">
+                      {q.title}
+                    </Link>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {dir?.[q.author_id]?.name ?? "Student"} · {timeAgo(q.created_at)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center py-8 my-auto">
+                <h3 className="font-bold text-slate-800 text-sm">No questions asked yet.</h3>
+                <p className="text-xs text-slate-500 mt-1">Be the first to start a discussion!</p>
+              </div>
+            )}
           </div>
 
           <div className="pt-3 border-t border-slate-100 text-center mt-2">
@@ -268,7 +560,7 @@ function StudentHome() {
           {slots.data?.length ? (
             <div className="py-4 space-y-3">
               {slots.data.slice(0, 2).map((s) => (
-                <div key={s.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div key={s.id} className="p-4 rounded-xl border border-slate-100 bg-[#F9FCFA] flex items-center justify-between">
                   <div>
                     <p className="font-bold text-sm text-slate-800">{s.label}</p>
                     <p className="text-xs text-slate-500 mt-0.5">
@@ -309,7 +601,6 @@ function StudentHome() {
 
       {/* Bottom 2-Column Section */}
       <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
-        {/* Left: Upcoming events */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <h2 className="font-bold text-slate-800 text-base">Upcoming events</h2>
@@ -324,7 +615,6 @@ function StudentHome() {
           </div>
         </div>
 
-        {/* Right: Latest opportunities */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <h2 className="font-bold text-slate-800 text-base">Latest opportunities</h2>
@@ -394,59 +684,22 @@ function AlumniHome() {
     },
   });
 
+  const firstName = profile?.name?.split(" ")[0] || "Harini";
+  const alumniSubtitle = [
+    [profile?.job_title, profile?.company].filter(Boolean).join(" at ") || "Full Stack Developer at Cognizant",
+    profile?.batch ? `Batch ${profile.batch}` : "Batch 2019–2023",
+  ].filter(Boolean).join(" · ");
+
   return (
     <div className="mx-auto max-w-6xl space-y-7">
-      {/* Welcome Hero Banner Card */}
-      <section className="relative overflow-hidden rounded-3xl border border-[#D5EADF]/60 bg-gradient-to-r from-[#EBF7F2] via-[#F2FAF6] to-[#E9F6F0] p-7 md:p-9 shadow-xs animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 z-10 relative">
-          <div className="max-w-xl">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-              Welcome back,{" "}
-              <span className="text-sky-500 font-extrabold">
-                {profile?.name?.split(" ")[0] || "there"}!
-              </span>{" "}
-              👋
-            </h1>
-            <p className="mt-2.5 text-sm md:text-base text-slate-600 leading-relaxed font-normal">
-              {[profile?.job_title, profile?.company].filter(Boolean).join(" at ") ||
-                "Alumnus of Kongu Engineering College"}
-              {profile?.batch ? ` · Batch ${profile.batch}` : ""}
-            </p>
-          </div>
-
-          {/* Campus Vector Illustration */}
-          <div className="w-full md:w-80 shrink-0 flex justify-center">
-            <svg className="w-full h-auto max-h-44" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="150" y="70" width="100" height="70" rx="4" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
-              <path d="M140 70 L200 40 L260 70 Z" fill="#FFFFFF" stroke="#475569" strokeWidth="2" />
-              <rect x="180" y="48" width="40" height="12" rx="2" fill="#FFFFFF" stroke="#475569" strokeWidth="1.5" />
-              <text x="200" y="57" fill="#1D8249" fontSize="8" fontWeight="bold" textAnchor="middle">KEC</text>
-              <rect x="165" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="220" y="80" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="165" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="220" y="105" width="15" height="15" rx="2" fill="#E2E8F0" stroke="#475569" strokeWidth="1.5" />
-              <rect x="190" y="115" width="20" height="25" fill="#475569" />
-
-              <circle cx="268" cy="35" r="16" fill="#3B82F6" />
-              <path d="M260 35 L268 30 L276 35 L268 40 Z" fill="#FFFFFF" />
-              <path d="M263 36.5 V41 C263 43 273 43 273 41 V36.5" fill="none" stroke="#FFFFFF" strokeWidth="1.5" />
-
-              <circle cx="295" cy="80" fill="#22C55E" r="14" />
-              <rect x="288" y="75" width="14" height="10" rx="1.5" fill="#FFFFFF" />
-              <path d="M292 75 V73 C292 72 298 72 298 73 V75" stroke="#FFFFFF" strokeWidth="1.5" />
-
-              <circle cx="358" cy="78" fill="#2563EB" r="14" />
-              <path d="M352 74 H364 C366 74 366 80 364 80 H356 L352 84 V80 C350 80 350 74 352 74 Z" fill="#FFFFFF" />
-
-              <path d="M50 155 H380" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="4 4" />
-            </svg>
-          </div>
-        </div>
-      </section>
+      {/* VIDEO HERO BANNER EXCLUSIVELY FOR ALUMNI PAGE */}
+      <VideoHeroBanner
+        name={firstName}
+        subtitle={alumniSubtitle}
+      />
 
       {/* Quick Action Cards */}
       <section className="grid gap-5 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-        {/* Card 1: Set Office Hours */}
         <Link
           to="/app/office-hours"
           className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -465,7 +718,6 @@ function AlumniHome() {
           <ArrowRight className="h-4 w-4 text-[#2563EB] self-end opacity-80 transition-transform group-hover:translate-x-1" />
         </Link>
 
-        {/* Card 2: Post Opening & Referral */}
         <Link
           to="/app/opportunities"
           className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -484,7 +736,6 @@ function AlumniHome() {
           <ArrowRight className="h-4 w-4 text-[#1F9054] self-end opacity-80 transition-transform group-hover:translate-x-1" />
         </Link>
 
-        {/* Card 3: Write a Story */}
         <Link
           to="/app/stories"
           className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -506,7 +757,6 @@ function AlumniHome() {
 
       {/* Middle 2-Column Section */}
       <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
-        {/* Left: Pending connect requests */}
         <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[240px]">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -542,7 +792,6 @@ function AlumniHome() {
           </div>
         </div>
 
-        {/* Right: Pending referral requests */}
         <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs min-h-[240px]">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -573,4 +822,3 @@ function AlumniHome() {
     </div>
   );
 }
-
