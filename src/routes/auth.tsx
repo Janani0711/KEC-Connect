@@ -110,19 +110,18 @@ function AuthPage() {
     }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
         data: {
-          role,
           name: name.trim(),
+          role,
           branch: branch || null,
-          year: role === "student" ? year : "",
-          batch: batch || null,
-          company: role === "alumni" ? company : null,
-          job_title: role === "alumni" ? jobTitle : null,
-          bio,
+          year: role === "student" ? Number(year) || null : null,
+          batch: role === "alumni" ? Number(batch) || null : null,
+          company: role === "alumni" ? company.trim() || null : null,
+          job_title: role === "alumni" ? jobTitle.trim() || null : null,
+          bio: bio.trim() || null,
         },
       },
     });
@@ -134,17 +133,14 @@ function AuthPage() {
     setSent(true);
   }
 
-  async function handleForgotPassword(e: React.MouseEvent): Promise<void> {
-    e.preventDefault();
+  async function handleForgotPassword(): Promise<void> {
     if (!email.trim()) {
-      toast.error("Please enter your college email address first.");
+      toast.error("Enter your email address first.");
       return;
     }
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth?mode=reset`,
     });
-    setLoading(false);
     if (error) {
       toast.error(error.message);
     } else {
@@ -154,7 +150,7 @@ function AuthPage() {
 
   return (
     <div className="relative min-h-screen flex flex-col font-sans text-slate-900 overflow-x-hidden selection:bg-blue-600 selection:text-white">
-      {/* Background Video Layer — Video 2, perfectly tuned transparency */}
+      {/* Background Video Layer — Video 2 */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <video
           ref={videoRef}
@@ -168,40 +164,17 @@ function AuthPage() {
         >
           <source src="/video2.mp4" type="video/mp4" />
         </video>
-        {/* Light dark overlay for card contrast — video stays clearly visible */}
+        {/* Light dark overlay for card contrast */}
         <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(10,25,50,0.45) 0%, rgba(0,0,0,0.25) 50%, rgba(10,25,50,0.50) 100%)" }} />
       </div>
 
-      {/* Top Banner Header - Kongu Engineering College */}
-      <header className="w-full bg-[#0C2340]/95 backdrop-blur-md border-b border-white/15 text-white py-3 px-4 sm:px-8 shadow-xl z-20 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3 sm:gap-5 flex-1 min-w-[280px]">
-          <img
-            src="/kec-logo.jpg"
-            alt="KEC Logo"
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-contain bg-white p-0.5 border-2 border-white/20 shadow-md flex-shrink-0"
-          />
-          <div className="flex-1">
-            <h1 className="text-base sm:text-xl md:text-2xl font-black tracking-wider font-serif text-white uppercase drop-shadow-sm">
-              KONGU ENGINEERING COLLEGE
-            </h1>
-            <p className="text-[11px] sm:text-xs text-slate-200 font-medium tracking-wide">
-              (Autonomous)
-            </p>
-            <p className="text-[10px] sm:text-xs text-yellow-300 font-bold tracking-widest uppercase">
-              PERUNDURAI ERODE - 638060 TAMILNADU INDIA
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-white/95 hover:bg-white rounded-full shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-slate-600" />
-            <span>Back to home</span>
-          </Link>
-        </div>
+      {/* Top Header Bar - Centered header.jpg image with seamless background color #16336D */}
+      <header className="w-full bg-[#16336D] border-b border-white/15 py-2 px-4 shadow-xl z-20 flex items-center justify-center relative min-h-[65px] sm:min-h-[80px]">
+        <img
+          src="/header.jpg"
+          alt="Kongu Engineering College Header"
+          className="h-12 sm:h-16 md:h-20 w-auto object-contain mx-auto block"
+        />
       </header>
 
       {/* Main Login Card Area */}
@@ -266,8 +239,8 @@ function AuthPage() {
                 /* SIGN IN FORM */
                 <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                      Welcome back <span className="inline-block animate-bounce text-xl">👋</span>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      Welcome back
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-500">
                       Sign in to access the KEC student & alumni portal.
@@ -288,132 +261,112 @@ function AuthPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="23ecr085@kongu.edu"
-                        className="pl-10 h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-sm transition-all"
+                        className="pl-10 h-11 rounded-xl bg-slate-50/80 border-slate-200 focus:bg-white transition-all text-sm"
                       />
                     </div>
                   </div>
 
                   {/* Password Field */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="password" className="text-xs font-semibold text-slate-700">
-                      Password
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="pass" className="text-xs font-semibold text-slate-700">
+                        Password
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        id="password"
+                        id="pass"
                         type={showPassword ? "text" : "password"}
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                        className="pl-10 pr-10 h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-sm transition-all"
+                        placeholder="••••••••"
+                        className="pl-10 pr-10 h-11 rounded-xl bg-slate-50/80 border-slate-200 focus:bg-white transition-all text-sm"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <span>Remember me</span>
+                  {/* Remember Me Checkbox */}
+                  <div className="flex items-center space-x-2 pt-1">
+                    <input
+                      id="remember"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="remember" className="text-xs text-slate-600 cursor-pointer font-medium">
+                      Remember me on this device
                     </label>
-
-                    <button
-                      type="button"
-                      onClick={handleForgotPassword}
-                      className="font-semibold text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
-                    >
-                      Forgot password?
-                    </button>
                   </div>
 
                   {/* Submit Button */}
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-sm mt-2"
+                    className="w-full h-11 bg-[#0F2847] hover:bg-[#163861] text-white font-semibold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer"
                   >
-                    {loading ? (
-                      "Signing in…"
-                    ) : (
-                      <>
-                        <span>Sign In</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
+                    <span>{loading ? "Signing in..." : "Sign in to Dashboard"}</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </Button>
-
-                  {/* Switch to Signup */}
-                  <div className="text-center pt-2 text-xs text-slate-500">
-                    New to KEC Connect?{" "}
-                    <button
-                      type="button"
-                      onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}
-                      className="font-semibold text-blue-600 hover:underline focus:outline-none"
-                    >
-                      Create an account
-                    </button>
-                  </div>
                 </form>
               ) : (
                 /* CREATE ACCOUNT FORM */
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                      Join KEC Connect
+                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                      Join the KEC Network
                     </h2>
                     <p className="text-xs text-slate-500">
-                      Create an account to connect with KEC students and alumni.
+                      Create your verified account in 60 seconds.
                     </p>
                   </div>
 
-                  {/* Role Selector */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">I am a</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["student", "alumni"] as const).map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => setRole(r)}
-                          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-medium transition-all ${
-                            role === r
-                              ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold shadow-sm"
-                              : "border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100"
-                          }`}
-                        >
-                          {r === "student" ? (
-                            <>
-                              <GraduationCap className="w-4 h-4 text-blue-600" />
-                              <span>Student</span>
-                            </>
-                          ) : (
-                            <>
-                              <Building2 className="w-4 h-4 text-blue-600" />
-                              <span>Alumnus / Alumna</span>
-                            </>
-                          )}
-                        </button>
-                      ))}
-                    </div>
+                  {/* Role Selection Tabs */}
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/80 rounded-xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setRole("student")}
+                      className={`flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                        role === "student"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      <span>Student</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole("alumni")}
+                      className={`flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                        role === "alumni"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>Alumnus / Alumna</span>
+                    </button>
                   </div>
 
-                  {/* Full Name */}
-                  <div className="space-y-1.5">
+                  {/* Name Input */}
+                  <div className="space-y-1">
                     <Label htmlFor="name" className="text-xs font-semibold text-slate-700">
                       Full Name
                     </Label>
@@ -421,47 +374,47 @@ function AuthPage() {
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         id="name"
+                        type="text"
                         required
-                        maxLength={80}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="John Doe"
-                        className="pl-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-xs sm:text-sm"
+                        placeholder="Kiruthiya S"
+                        className="pl-10 h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                       />
                     </div>
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="su-email" className="text-xs font-semibold text-slate-700">
-                      {role === "student" ? "College Email" : "Email"}
+                  {/* Email Input */}
+                  <div className="space-y-1">
+                    <Label htmlFor="signup-email" className="text-xs font-semibold text-slate-700">
+                      {role === "student" ? "College Email" : "Email Address"}
                     </Label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        id="su-email"
+                        id="signup-email"
                         type="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder={role === "student" ? "23ecr085@kongu.edu" : "you@company.com"}
-                        className="pl-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-xs sm:text-sm"
+                        placeholder={role === "student" ? "23ecr085@kongu.edu" : "name@company.com"}
+                        className="pl-10 h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                       />
                     </div>
                   </div>
 
-                  {/* Branch & Year/Batch Grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-700">Branch</Label>
+                  {/* Branch & Year Selection */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-slate-700">Department</Label>
                       <Select value={branch} onValueChange={setBranch}>
-                        <SelectTrigger className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs">
-                          <SelectValue placeholder="Select" />
+                        <SelectTrigger className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs">
+                          <SelectValue placeholder="Branch" />
                         </SelectTrigger>
                         <SelectContent>
                           {BRANCHES.map((b) => (
-                            <SelectItem key={b} value={b} className="text-xs">
-                              {b}
+                            <SelectItem key={b.code} value={b.code} className="text-xs">
+                              {b.code}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -469,118 +422,95 @@ function AuthPage() {
                     </div>
 
                     {role === "student" ? (
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <Label className="text-xs font-semibold text-slate-700">Year</Label>
                         <Select value={year} onValueChange={setYear}>
-                          <SelectTrigger className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs">
-                            <SelectValue placeholder="Select" />
+                          <SelectTrigger className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs">
+                            <SelectValue placeholder="Current Year" />
                           </SelectTrigger>
                           <SelectContent>
-                            {["1", "2", "3", "4"].map((y) => (
-                              <SelectItem key={y} value={y} className="text-xs">
-                                {y} year
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="1">1st Year</SelectItem>
+                            <SelectItem value="2">2nd Year</SelectItem>
+                            <SelectItem value="3">3rd Year</SelectItem>
+                            <SelectItem value="4">4th Year</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     ) : (
-                      <div className="space-y-1.5">
-                        <Label htmlFor="batch" className="text-xs font-semibold text-slate-700">
-                          Batch
-                        </Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-slate-700">Grad Batch</Label>
                         <Input
-                          id="batch"
+                          type="number"
                           value={batch}
                           onChange={(e) => setBatch(e.target.value)}
-                          placeholder="2019–2023"
-                          className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs"
+                          placeholder="e.g. 2023"
+                          className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                         />
                       </div>
                     )}
                   </div>
 
+                  {/* Additional Alumni Fields */}
                   {role === "alumni" && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="company" className="text-xs font-semibold text-slate-700">
-                          Company
-                        </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-slate-700">Company</Label>
                         <Input
-                          id="company"
+                          type="text"
                           value={company}
                           onChange={(e) => setCompany(e.target.value)}
-                          className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs"
+                          placeholder="Cognizant"
+                          className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="jobtitle" className="text-xs font-semibold text-slate-700">
-                          Role
-                        </Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-slate-700">Role / Title</Label>
                         <Input
-                          id="jobtitle"
+                          type="text"
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
-                          className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs"
+                          placeholder="Software Engineer"
+                          className="h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* Password */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="su-password" className="text-xs font-semibold text-slate-700">
-                      Password (min. 8 characters)
+                  {/* Password Input */}
+                  <div className="space-y-1">
+                    <Label htmlFor="signup-pass" className="text-xs font-semibold text-slate-700">
+                      Password
                     </Label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        id="su-password"
+                        id="signup-pass"
                         type={showPassword ? "text" : "password"}
                         required
-                        minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="pl-10 pr-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-xs sm:text-sm"
+                        placeholder="At least 8 characters"
+                        className="pl-10 pr-10 h-10 rounded-xl bg-slate-50/80 border-slate-200 text-xs"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Submit Button */}
+                  {/* Create Account Submit Button */}
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-sm mt-2"
+                    className="w-full h-11 bg-[#0F2847] hover:bg-[#163861] text-white font-semibold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer mt-2"
                   >
-                    {loading ? (
-                      "Creating account…"
-                    ) : (
-                      <>
-                        <span>Create Account</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
+                    <span>{loading ? "Creating account..." : "Create your Account"}</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </Button>
-
-                  {/* Switch to Signin */}
-                  <div className="text-center pt-1 text-xs text-slate-500">
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => navigate({ to: "/auth", search: { mode: "signin" } })}
-                      className="font-semibold text-blue-600 hover:underline focus:outline-none"
-                    >
-                      Sign in
-                    </button>
-                  </div>
                 </form>
               )}
             </div>
