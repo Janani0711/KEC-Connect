@@ -1,12 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -14,8 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BRANCHES, COLLEGE_EMAIL_RE } from "@/lib/kec";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  CheckCircle2,
+  User,
+  Building2,
+  GraduationCap,
+  ArrowLeft,
+} from "lucide-react";
 
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup"]).catch("signin"),
@@ -43,6 +53,10 @@ function AuthPage() {
   const [role, setRole] = useState<"student" | "alumni">("student");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,22 +68,46 @@ function AuthPage() {
   const [jobTitle, setJobTitle] = useState("");
   const [bio, setBio] = useState("");
 
+  // Guarantee HTML5 Video Autoplay & Muted State on Client Hydration
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("Video autoplay prevented by browser:", err);
+        });
+      }
+    }
+  }, []);
+
   async function handleSignIn(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     navigate({ to: "/app" });
   }
 
   async function handleSignUp(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    if (!name.trim()) { toast.error("Please enter your name."); return; }
-    if (role === "student" && !COLLEGE_EMAIL_RE.test(email.trim())) {
-      { toast.error("Students must sign up with a college email, e.g. 23ecr085@kongu.edu"); return; }
+    if (!name.trim()) {
+      toast.error("Please enter your name.");
+      return;
     }
-    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    if (role === "student" && !COLLEGE_EMAIL_RE.test(email.trim())) {
+      toast.error("Students must sign up with a college email, e.g. 23ecr085@kongu.edu");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -89,229 +127,466 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setSent(true);
   }
 
+  async function handleForgotPassword(e: React.MouseEvent): Promise<void> {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Please enter your college email address first.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth?mode=reset`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Password reset instructions sent to your email.");
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-surface">
-      <div className="mx-auto flex max-w-lg flex-col px-6 py-12">
-        <Link to="/" className="font-serif text-xl font-semibold">
-          KEC Connect
-        </Link>
+    <div className="relative min-h-screen flex flex-col font-sans text-slate-900 overflow-x-hidden selection:bg-blue-600 selection:text-white">
+      {/* Background Video Layer — Video 2, perfectly tuned transparency */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover scale-105"
+          style={{ filter: "brightness(0.75) saturate(1.1)" }}
+        >
+          <source src="/video2.mp4" type="video/mp4" />
+        </video>
+        {/* Light dark overlay for card contrast — video stays clearly visible */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(10,25,50,0.45) 0%, rgba(0,0,0,0.25) 50%, rgba(10,25,50,0.50) 100%)" }} />
+      </div>
 
-        {sent ? (
-          <div className="panel mt-8 p-8">
-            <h1 className="text-2xl">Check your email</h1>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              We sent a confirmation link to <span className="text-foreground">{email}</span>. Click
-              it to activate your account, then come back and sign in.
+      {/* Top Banner Header - Kongu Engineering College */}
+      <header className="w-full bg-[#0C2340]/95 backdrop-blur-md border-b border-white/15 text-white py-3 px-4 sm:px-8 shadow-xl z-20 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-5 flex-1 min-w-[280px]">
+          <img
+            src="/kec-logo.jpg"
+            alt="KEC Logo"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-contain bg-white p-0.5 border-2 border-white/20 shadow-md flex-shrink-0"
+          />
+          <div className="flex-1">
+            <h1 className="text-base sm:text-xl md:text-2xl font-black tracking-wider font-serif text-white uppercase drop-shadow-sm">
+              KONGU ENGINEERING COLLEGE
+            </h1>
+            <p className="text-[11px] sm:text-xs text-slate-200 font-medium tracking-wide">
+              (Autonomous)
             </p>
-            <Button
-              className="mt-6"
-              variant="outline"
-              onClick={() => {
-                setSent(false);
-                navigate({ to: "/auth", search: { mode: "signin" } });
-              }}
-            >
-              Back to sign in
-            </Button>
+            <p className="text-[10px] sm:text-xs text-yellow-300 font-bold tracking-widest uppercase">
+              PERUNDURAI ERODE - 638060 TAMILNADU INDIA
+            </p>
           </div>
-        ) : (
-          <div className="panel mt-8 p-8">
-            <Tabs
-              value={mode}
-              onValueChange={(v) =>
-                navigate({ to: "/auth", search: { mode: v as "signin" | "signup" } })
-              }
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign in</TabsTrigger>
-                <TabsTrigger value="signup">Create account</TabsTrigger>
-              </TabsList>
-            </Tabs>
+        </div>
 
-            {mode === "signin" ? (
-              <form onSubmit={handleSignIn} className="mt-8 space-y-5">
-                <h1 className="text-2xl">Welcome back</h1>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="23ecr085@kongu.edu"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in…" : "Sign in"}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleSignUp} className="mt-8 space-y-5">
-                <h1 className="text-2xl">Join KEC Connect</h1>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-white/95 hover:bg-white rounded-full shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-600" />
+            <span>Back to home</span>
+          </Link>
+        </div>
+      </header>
 
-                <div className="space-y-2">
-                  <Label>I am a</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["student", "alumni"] as const).map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setRole(r)}
-                        className={`rounded-md border px-4 py-3 text-sm capitalize transition-colors ${
-                          role === r
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-card hover:bg-secondary"
-                        }`}
-                      >
-                        {r === "student" ? "Student (1st–4th year)" : "Alumnus / Alumna"}
-                      </button>
-                    ))}
-                  </div>
-                  {role === "alumni" && (
-                    <p className="text-xs text-muted-foreground">
-                      Alumni accounts are self-declared for now and reviewed manually before being
-                      marked verified.
-                    </p>
+      {/* Main Login Card Area */}
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-auto z-10">
+        <div className="w-full max-w-[460px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-8 transition-all">
+          {sent ? (
+            <div className="text-center py-4 space-y-4">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Check your email</h2>
+              <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
+                We sent a confirmation link to <span className="font-semibold text-slate-900">{email}</span>. Click
+                it to activate your account, then sign in below.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4 w-full h-11 rounded-xl font-medium border-slate-200 hover:bg-slate-50 text-slate-700"
+                onClick={() => {
+                  setSent(false);
+                  navigate({ to: "/auth", search: { mode: "signin" } });
+                }}
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <div>
+              {/* Tab Navigation */}
+              <div className="flex border-b border-slate-200 mb-6">
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/auth", search: { mode: "signin" } })}
+                  className={`flex-1 py-3 text-center text-sm font-semibold transition-all relative ${
+                    mode === "signin"
+                      ? "text-blue-600"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Sign In
+                  {mode === "signin" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
                   )}
-                </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}
+                  className={`flex-1 py-3 text-center text-sm font-semibold transition-all relative ${
+                    mode === "signup"
+                      ? "text-blue-600"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Create Account
+                  {mode === "signup" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
+                  )}
+                </button>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input
-                    id="name"
-                    required
-                    maxLength={80}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="su-email">
-                    {role === "student" ? "College email" : "Email"}
-                  </Label>
-                  <Input
-                    id="su-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={role === "student" ? "23ecr085@kongu.edu" : "you@company.com"}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Branch</Label>
-                    <Select value={branch} onValueChange={setBranch}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {BRANCHES.map((b) => (
-                          <SelectItem key={b} value={b}>
-                            {b}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {mode === "signin" ? (
+                /* SIGN IN FORM */
+                <form onSubmit={handleSignIn} className="space-y-5">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                      Welcome back <span className="inline-block animate-bounce text-xl">👋</span>
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Sign in to access the KEC student & alumni portal.
+                    </p>
                   </div>
-                  {role === "student" ? (
-                    <div className="space-y-2">
-                      <Label>Year</Label>
-                      <Select value={year} onValueChange={setYear}>
-                        <SelectTrigger>
+
+                  {/* Email Field */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-xs font-semibold text-slate-700">
+                      College Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="23ecr085@kongu.edu"
+                        className="pl-10 h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-sm transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="password" className="text-xs font-semibold text-slate-700">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        className="pl-10 pr-10 h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-sm transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Me & Forgot Password */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <span>Remember me</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="font-semibold text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-sm mt-2"
+                  >
+                    {loading ? (
+                      "Signing in…"
+                    ) : (
+                      <>
+                        <span>Sign In</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Switch to Signup */}
+                  <div className="text-center pt-2 text-xs text-slate-500">
+                    New to KEC Connect?{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}
+                      className="font-semibold text-blue-600 hover:underline focus:outline-none"
+                    >
+                      Create an account
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* CREATE ACCOUNT FORM */
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      Join KEC Connect
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Create an account to connect with KEC students and alumni.
+                    </p>
+                  </div>
+
+                  {/* Role Selector */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">I am a</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["student", "alumni"] as const).map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setRole(r)}
+                          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-medium transition-all ${
+                            role === r
+                              ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold shadow-sm"
+                              : "border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {r === "student" ? (
+                            <>
+                              <GraduationCap className="w-4 h-4 text-blue-600" />
+                              <span>Student</span>
+                            </>
+                          ) : (
+                            <>
+                              <Building2 className="w-4 h-4 text-blue-600" />
+                              <span>Alumnus / Alumna</span>
+                            </>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Full Name */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-xs font-semibold text-slate-700">
+                      Full Name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="name"
+                        required
+                        maxLength={80}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="John Doe"
+                        className="pl-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-xs sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="su-email" className="text-xs font-semibold text-slate-700">
+                      {role === "student" ? "College Email" : "Email"}
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="su-email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder={role === "student" ? "23ecr085@kongu.edu" : "you@company.com"}
+                        className="pl-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-xs sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Branch & Year/Batch Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700">Branch</Label>
+                      <Select value={branch} onValueChange={setBranch}>
+                        <SelectTrigger className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
-                          {["1", "2", "3", "4"].map((y) => (
-                            <SelectItem key={y} value={y}>
-                              {y} year
+                          {BRANCHES.map((b) => (
+                            <SelectItem key={b} value={b} className="text-xs">
+                              {b}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="batch">Batch</Label>
-                      <Input
-                        id="batch"
-                        value={batch}
-                        onChange={(e) => setBatch(e.target.value)}
-                        placeholder="2019–2023"
-                      />
+
+                    {role === "student" ? (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700">Year</Label>
+                        <Select value={year} onValueChange={setYear}>
+                          <SelectTrigger className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["1", "2", "3", "4"].map((y) => (
+                              <SelectItem key={y} value={y} className="text-xs">
+                                {y} year
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="batch" className="text-xs font-semibold text-slate-700">
+                          Batch
+                        </Label>
+                        <Input
+                          id="batch"
+                          value={batch}
+                          onChange={(e) => setBatch(e.target.value)}
+                          placeholder="2019–2023"
+                          className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {role === "alumni" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="company" className="text-xs font-semibold text-slate-700">
+                          Company
+                        </Label>
+                        <Input
+                          id="company"
+                          value={company}
+                          onChange={(e) => setCompany(e.target.value)}
+                          className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="jobtitle" className="text-xs font-semibold text-slate-700">
+                          Role
+                        </Label>
+                        <Input
+                          id="jobtitle"
+                          value={jobTitle}
+                          onChange={(e) => setJobTitle(e.target.value)}
+                          className="h-10 bg-slate-50/50 border-slate-200 rounded-xl text-xs"
+                        />
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {role === "alumni" && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Company</Label>
+                  {/* Password */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="su-password" className="text-xs font-semibold text-slate-700">
+                      Password (min. 8 characters)
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        id="company"
-                        value={company}
-                        onChange={(e) => setCompany(e.target.value)}
+                        id="su-password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="pl-10 pr-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-600 rounded-xl text-xs sm:text-sm"
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jobtitle">Role</Label>
-                      <Input
-                        id="jobtitle"
-                        value={jobTitle}
-                        onChange={(e) => setJobTitle(e.target.value)}
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Short bio (optional)</Label>
-                  <Textarea
-                    id="bio"
-                    rows={3}
-                    maxLength={400}
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                  />
-                </div>
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-sm mt-2"
+                  >
+                    {loading ? (
+                      "Creating account…"
+                    ) : (
+                      <>
+                        <span>Create Account</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
 
-                <div className="space-y-2">
-                  <Label htmlFor="su-password">Password</Label>
-                  <Input
-                    id="su-password"
-                    type="password"
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account…" : "Create account"}
-                </Button>
-              </form>
-            )}
-          </div>
-        )}
-      </div>
-    </main>
+                  {/* Switch to Signin */}
+                  <div className="text-center pt-1 text-xs text-slate-500">
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: "/auth", search: { mode: "signin" } })}
+                      className="font-semibold text-blue-600 hover:underline focus:outline-none"
+                    >
+                      Sign in
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
