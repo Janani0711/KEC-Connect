@@ -1,3 +1,4 @@
+// KEC Connect Authentication Page
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
