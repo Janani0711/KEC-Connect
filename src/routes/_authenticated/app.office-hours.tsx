@@ -17,18 +17,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DAYS, canHost, useDirectory, useProfile } from "@/lib/kec";
-import { Video, Calendar, Clock, CheckCircle, ExternalLink } from "lucide-react";
+import { Video, Calendar, Clock, CheckCircle, ExternalLink, GraduationCap, Building2, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/office-hours")({
   head: () => ({
     meta: [
-      { title: "Schedule Availability & Office Hours — KEC Connect" },
+      { title: "Schedule Availability — KEC Connect" },
       {
         name: "description",
-        content: "Book focused time with KEC alumni and final-year students, or schedule availability of your own.",
+        content: "Book focused 1:1 guidance slots with KEC alumni and 4th-year seniors.",
       },
       { property: "og:title", content: "Schedule Availability — KEC Connect" },
-      { property: "og:description", content: "Short, focused mentoring slots with Google Meet." },
+      { property: "og:description", content: "1:1 mentoring slots with Google Meet." },
     ],
   }),
   component: OfficeHoursPage,
@@ -48,7 +48,8 @@ function OfficeHoursPage() {
   const qc = useQueryClient();
   const host = canHost(me);
 
-  const [label, setLabel] = useState("Resume review & guidance");
+  const [filterType, setFilterType] = useState<"all" | "alumni" | "senior">("all");
+  const [label, setLabel] = useState("1:1 Guidance & Mock Interview");
   const [duration, setDuration] = useState("30");
   const [recurring, setRecurring] = useState(false);
   const [day, setDay] = useState("1");
@@ -98,7 +99,7 @@ function OfficeHoursPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Availability scheduled & published successfully!");
+      toast.success("Availability slot published successfully!");
       setStartTime("");
       qc.invalidateQueries({ queryKey: ["slots"] });
     },
@@ -142,7 +143,20 @@ function OfficeHoursPage() {
   });
 
   const mySlots = (slots.data ?? []).filter((s) => s.host_id === me?.id);
+
+  // All open slots excluding current user
   const openSlots = (slots.data ?? []).filter((s) => s.status === "open" && s.host_id !== me?.id);
+
+  // Filter open slots by Alumni vs 4th Year Senior
+  const filteredOpenSlots = openSlots.filter((s) => {
+    const hostProfile = dir?.[s.host_id];
+    const isAlumniHost = hostProfile?.role === "alumni";
+    const isSeniorHost = hostProfile?.role === "student" && (hostProfile?.year ?? 0) >= 4;
+
+    if (filterType === "alumni") return isAlumniHost;
+    if (filterType === "senior") return isSeniorHost;
+    return true;
+  });
 
   function when(s: { is_recurring: boolean; day_of_week: number | null; start_time: string | null }) {
     if (s.is_recurring) return `Every ${DAYS[s.day_of_week ?? 0]}`;
@@ -155,33 +169,39 @@ function OfficeHoursPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
             <Calendar className="w-8 h-8 text-blue-600" />
-            <span>Schedule Availability & Office Hours</span>
+            <span>Schedule Availability</span>
           </h1>
           <p className="mt-1.5 text-sm text-slate-600">
             {host
-              ? "Schedule your availability for 1:1 student guidance. Google Meet links are generated automatically."
-              : "Pick an open slot to get 1:1 career guidance with alumni and join via Google Meet at the scheduled time."}
+              ? "Publish your availability for 1:1 guidance. Google Meet links are generated automatically."
+              : "Select any open slot from KEC Alumni or 4th Year Seniors for 1:1 career guidance."}
           </p>
         </div>
       </header>
 
-      {/* Schedule Availability Section (for Hosts/Alumni) */}
+      {/* Schedule Availability Section (for Alumni and 4th Year Seniors) */}
       {host && (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-emerald-600" />
-            <span>Schedule Availability</span>
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-emerald-600" />
+              <span>Schedule Your Availability</span>
+            </h2>
+            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 font-semibold text-xs">
+              {me?.role === "alumni" ? "Alumni Host" : "4th Year Senior Host"}
+            </Badge>
+          </div>
+
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="s-label" className="text-xs font-semibold text-slate-700">
-                Topic / Title
+                Slot Title / Topic
               </Label>
               <Input
                 id="s-label"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder="Resume review & 1:1 mentorship"
+                placeholder="1:1 Placement prep & resume guidance"
                 className="h-10 rounded-xl bg-slate-50 border-slate-200 text-sm"
               />
             </div>
@@ -246,12 +266,12 @@ function OfficeHoursPage() {
                 disabled={createSlot.isPending}
                 className="h-11 px-6 bg-[#0F2847] hover:bg-[#163861] text-white font-semibold rounded-xl shadow-md transition-all"
               >
-                {createSlot.isPending ? "Scheduling…" : "Schedule & Publish Availability"}
+                {createSlot.isPending ? "Publishing…" : "Publish Availability Slot"}
               </Button>
             </div>
           </div>
 
-          <h2 className="text-lg font-bold text-slate-900 pt-4">Your Upcoming Slots</h2>
+          <h2 className="text-lg font-bold text-slate-900 pt-4">Your Published Slots</h2>
           <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
             {mySlots.length ? (
               mySlots.map((s) => {
@@ -292,90 +312,144 @@ function OfficeHoursPage() {
         </section>
       )}
 
-      {/* Open Slots for Booking */}
+      {/* Open Availability Slots for Students */}
       <section className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900">Available Slots</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="text-xl font-bold text-slate-900">Available Mentorship Slots</h2>
+
+          {/* Filter Chips: All vs Alumni vs 4th Year Senior */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 self-start sm:self-auto">
+            <button
+              onClick={() => setFilterType("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                filterType === "all" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              All Slots
+            </button>
+            <button
+              onClick={() => setFilterType("alumni")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                filterType === "alumni" ? "bg-white text-blue-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Alumni</span>
+            </button>
+            <button
+              onClick={() => setFilterType("senior")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                filterType === "senior" ? "bg-white text-amber-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>4th Year Seniors</span>
+            </button>
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
-          {openSlots.length ? (
-            openSlots.map((s) => (
-              <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-slate-900">{s.label}</h3>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">
-                      {dir?.[s.host_id]?.name ?? "Alumni Mentor"}
-                      {dir?.[s.host_id]?.company ? ` · ${dir[s.host_id]!.company}` : ""}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {s.duration_minutes} min
-                  </Badge>
-                </div>
-
-                <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                  <span>{when(s)}</span>
-                </div>
-
-                {bookingSlot === s.id ? (
-                  <div className="space-y-3 pt-2">
-                    <Textarea
-                      rows={3}
-                      maxLength={500}
-                      value={bookingNote}
-                      onChange={(e) => setBookingNote(e.target.value)}
-                      placeholder="Optional: What topic or questions would you like to cover?"
-                      className="text-xs rounded-xl bg-slate-50 border-slate-200"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => book.mutate(s.id)}
-                        disabled={book.isPending}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg"
-                      >
-                        {book.isPending ? "Booking..." : "Confirm & Get Google Meet"}
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-xs" onClick={() => setBookingSlot(null)}>
-                        Cancel
-                      </Button>
+          {filteredOpenSlots.length ? (
+            filteredOpenSlots.map((s) => {
+              const hostProfile = dir?.[s.host_id];
+              const isAlumniHost = hostProfile?.role === "alumni";
+              return (
+                <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-base">{s.label}</h3>
+                      <p className="text-xs font-semibold text-slate-700 mt-0.5">
+                        {hostProfile?.name ?? "KEC Mentor"}
+                        {hostProfile?.company ? ` · ${hostProfile.company}` : hostProfile?.branch ? ` · ${hostProfile.branch}` : ""}
+                      </p>
                     </div>
+
+                    {/* Host Category Badge */}
+                    {isAlumniHost ? (
+                      <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 text-[11px] font-semibold flex items-center gap-1">
+                        <Building2 className="w-3 h-3" /> Alumni
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50 text-[11px] font-semibold flex items-center gap-1">
+                        <GraduationCap className="w-3 h-3" /> 4th Year Senior
+                      </Badge>
+                    )}
                   </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full mt-2 font-semibold text-xs rounded-xl border-blue-200 hover:bg-blue-50 text-blue-700"
-                    onClick={() => setBookingSlot(s.id)}
-                  >
-                    Book This Slot
-                  </Button>
-                )}
-              </div>
-            ))
+
+                  <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{when(s)}</span>
+                    </div>
+                    <span className="font-medium text-slate-500">{s.duration_minutes} min</span>
+                  </div>
+
+                  {bookingSlot === s.id ? (
+                    <div className="space-y-3 pt-2">
+                      <Textarea
+                        rows={3}
+                        maxLength={500}
+                        value={bookingNote}
+                        onChange={(e) => setBookingNote(e.target.value)}
+                        placeholder="Optional note: What questions or topic would you like to cover?"
+                        className="text-xs rounded-xl bg-slate-50 border-slate-200"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => book.mutate(s.id)}
+                          disabled={book.isPending}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg"
+                        >
+                          {book.isPending ? "Booking..." : "Confirm & Get Google Meet"}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-xs" onClick={() => setBookingSlot(null)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full mt-2 font-semibold text-xs rounded-xl border-blue-200 hover:bg-blue-50 text-blue-700"
+                      onClick={() => setBookingSlot(s.id)}
+                    >
+                      Book This Slot
+                    </Button>
+                  )}
+                </div>
+              );
+            })
           ) : (
-            <p className="text-sm text-slate-500 col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
-              No open slots available right now. Check back soon or request custom office hours!
+            <p className="text-sm text-slate-500 col-span-2 bg-white p-8 rounded-2xl border border-slate-200 text-center">
+              No open slots available under this filter right now. Check back soon!
             </p>
           )}
         </div>
       </section>
 
-      {/* Student Bookings with Google Meet Join Buttons */}
+      {/* Student Booked Sessions with Google Meet links */}
       {!!myBookings.data?.length && (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-900">Your Booked Sessions</h2>
+          <h2 className="text-xl font-bold text-slate-900">Your Booked Mentorship Sessions</h2>
           <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
             {myBookings.data.map((b) => {
               const slot = slots.data?.find((s) => s.id === b.slot_id);
               const meetUrl = getGoogleMeetUrl(b.slot_id);
               const hostProfile = dir?.[slot?.host_id ?? ""];
+              const isAlumniHost = hostProfile?.role === "alumni";
               return (
                 <div key={b.id} className="p-5 flex flex-wrap items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-600" />
-                      <p className="font-bold text-slate-900">{slot?.label ?? "1:1 Mentorship Session"}</p>
+                      <p className="font-bold text-slate-900">{slot?.label ?? "1:1 Guidance Session"}</p>
+                      {isAlumniHost ? (
+                        <Badge className="bg-blue-50 text-blue-700 text-[10px]">Alumni</Badge>
+                      ) : (
+                        <Badge className="bg-amber-50 text-amber-700 text-[10px]">4th Year Senior</Badge>
+                      )}
                     </div>
                     <p className="text-xs text-slate-600">
                       With <span className="font-semibold text-slate-800">{hostProfile?.name ?? "Mentor"}</span>

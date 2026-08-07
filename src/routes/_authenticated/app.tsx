@@ -11,9 +11,7 @@ import {
   BookOpen,
   MessageSquare,
   Bookmark,
-  User,
   LogOut,
-  Sparkles,
   Menu,
   X,
   FileCheck,
@@ -26,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 const NAV_ITEMS = [
   { to: "/app", label: "Home", icon: Home, exact: true },
   { to: "/app/connect", label: "Alumni Directory", icon: Users },
-  { to: "/app/office-hours", label: "Office Hours", icon: Calendar },
+  { to: "/app/office-hours", label: "Schedule Availability", icon: Calendar },
   { to: "/app/opportunities", label: "Job Openings", icon: Briefcase },
   { to: "/app/referrals", label: "Referrals", icon: FileCheck },
   { to: "/app/stories", label: "Alumni Stories", icon: Bookmark },
@@ -60,12 +58,14 @@ function AppLayout() {
           mobileNavOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
-        {/* Sidebar Header */}
+        {/* Sidebar Header with KEC Official Logo */}
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
-          <Link to="/app" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0F2847] text-white shadow-md">
-              <Sparkles className="h-5 w-5 text-amber-400" />
-            </div>
+          <Link to="/app" className="flex items-center gap-3">
+            <img
+              src="/kec-logo.jpg"
+              alt="KEC Logo"
+              className="h-10 w-10 rounded-full object-contain bg-white p-0.5 border border-slate-200 shadow-sm flex-shrink-0"
+            />
             <div className="flex flex-col">
               <span className="font-bold tracking-tight text-[#0F2847] text-base leading-none">
                 KEC CONNECT
