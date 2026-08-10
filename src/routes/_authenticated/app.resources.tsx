@@ -72,10 +72,9 @@ function ResourcesPage() {
 
       const { error } = await supabase.from("resources").insert({
         title: title.trim(),
-        category,
+        category: category as any,
         branch: uploadBranch,
         file_url: fileUrl.trim(),
-        uploaded_by: me.id,
       });
       if (error) throw error;
     },
