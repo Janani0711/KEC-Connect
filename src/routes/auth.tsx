@@ -113,7 +113,7 @@ function AuthPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -135,7 +135,13 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    setSent(true);
+
+    if (signUpData.session) {
+      toast.success("Account created successfully! Welcome to KEC Connect.");
+      navigate({ to: "/app" });
+    } else {
+      setSent(true);
+    }
   }
 
   async function handleForgotPassword(): Promise<void> {
